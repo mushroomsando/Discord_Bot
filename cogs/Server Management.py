@@ -22,7 +22,7 @@ class Utilities(commands.Cog):
     @commands.command(name = "타임아웃")
     async def user_timeout(self, ctx):
         return 0
-        #TODO
+        #TODO 어떻게 하는거지;
     
     @commands.command(name = "서버정보")
     async def sever_info(self, ctx):

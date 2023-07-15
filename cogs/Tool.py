@@ -10,7 +10,7 @@ class Tool(commands.Cog):
     
     @commands.command(name="현제시간")
     async def now_time(self, ctx):
-        embed = discord.Embed(title="⏰ 현제 시간",description=f"현제시간은 {now} 입니다",color=0x00aaff)
+        embed = discord.Embed(title="🛠️ 현제 시간",description=f"현제시간은 {now} 입니다",color=0x00aaff)
         embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
         await ctx.reply(embed=embed)
     
@@ -31,22 +31,23 @@ class Tool(commands.Cog):
             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.reply(embed=embed)
         except ZeroDivisionError:
-            embed = discord.Embed(title="ERROR", description="0으로 나눌 수 없어요.", color=0xff0000)
+            embed = discord.Embed(title="🛠️ ERROR", description="0으로 나눌 수 없어요.", color=0xff0000)
             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.reply(embed=embed)
         except SyntaxError:
-            embed = discord.Embed(title="ERROR", description="수식이 완성되지 않았어요.", color=0xff0000)
+            embed = discord.Embed(title="🛠️ ERROR", description="수식이 완성되지 않았어요.", color=0xff0000)
             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.reply(embed=embed)
         except Exception as e:
-            embed = discord.Embed(title="ERROR", description=f"음... 무언가 잘못되었어요. ({e})", color=0xff0000)
+            embed = discord.Embed(title="🛠️ ERROR", description=f"음... 무언가 잘못되었어요.", color=0xff0000)
+            embed.add_field(name = "오류내용", value=e)
             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.reply(embed=embed)
 
     @calculate.error
     async def calculate_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
-            embed = discord.Embed(title="ERROR", description="사용법이 잘못되었습니다.", color=0xff0000)
+            embed = discord.Embed(title="🛠️ ERROR", description="사용법이 잘못되었습니다.", color=0xff0000)
             embed.add_field(name="올바른 사용법", value="!계산기 [수식]", inline=False)
             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.reply(embed=embed)

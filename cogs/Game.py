@@ -7,9 +7,14 @@ class Game(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @commands.command(name = "주사위")
+    @commands.command(name="주사위")
     async def dice(self, ctx):
-        await ctx.send(f"(데굴) {ctx.author.mention}님이 주사위를 굴려 {random.randrange(1,6)}이 나왔습니다.")
+        number = random.randrange(1, 6)
+        if number == 1:
+            particle = "이"
+        else:
+            particle = "가"
+        await ctx.send(f"(데굴) {ctx.author.mention}님이 주사위를 굴려 {number}{particle} 나왔습니다.")
 
     @commands.command(name="자판기")
     async def Vending_machine(self, ctx):
