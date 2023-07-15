@@ -40,3 +40,52 @@
 기상청 API에서 기상특보 정보 받아오기
     이건 연구중...
 '''
+from discord import Embed, Color
+from discord.ext import commands
+import sys
+sys.path.append('C:/Users/windows/Desktop/repository/Programing/Discord_bot/Wether_Function')
+from Weather_data import get_weather_data
+
+class Forecast(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.command(name="!일기예보")
+    async def forecast(self, ctx):
+        # '⚙️' 이모지로 반응
+        loading_emoji = '⚙️'
+        await ctx.message.add_reaction(loading_emoji)
+
+        forecast_data = get_weather_data()
+
+        # '⚙️' 이모지 삭제 및 '✅' 이모지로 교체
+        await ctx.message.remove_reaction(loading_emoji, ctx.me)
+        success_reaction = '✅'
+        await ctx.message.add_reaction(success_reaction)
+
+        # 예보 출력
+        embed = Embed(title="Weather Forecast", color=Color.blue())
+        for time, data in forecast_data.items():
+            embed.add_field(name="Time", value=f"{time}00", inline=True)
+            embed.add_field(name="Temperature", value=f"{data['TMP']}°C", inline=True)
+
+            sky_code = int(data['SKY'])
+            if sky_code == 1:
+                sky_status = "맑음"
+            elif sky_code == 3:
+                sky_status = "구름 조금"
+            elif sky_code == 4:
+                sky_status = "흐림"
+            else:
+                sky_status = "알 수 없음"
+
+            embed.add_field(name="Sky", value=sky_status, inline=True)
+            embed.add_field(name="Rain Probability", value=f"{data['POP']}%", inline=True)
+            embed.add_field(name="Humidity", value=f"{data['REH']}%", inline=True)
+            embed.add_field(name="\u200b", value="\u200b", inline=False)  # 빈 필드 추가 (디자인 목적)
+
+        await ctx.send(embed=embed)
+
+print("PASS")
+async def setup(bot):
+    await bot.add_cog(Forecast(bot))
