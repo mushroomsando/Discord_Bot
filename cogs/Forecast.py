@@ -1,5 +1,5 @@
 '''#TODO
-기상청 API에서 지금으로부터 최대 3시간 동안의 예보 받아오기
+기상청 API에서 지금으로부터 최대 6시간 동안의 예보 받아오기
     보여줄 정보 = 날씨, 기온, 습도, 강수확률, 풍향
     API에서 정보를 받아오고 가공하는 것은 이미 구현 완료
 
@@ -40,51 +40,56 @@
 기상청 API에서 기상특보 정보 받아오기
     이건 연구중...
 '''
-from discord import Embed
+import discord
 from discord.ext import commands
 import sys
 sys.path.append('C:/Users/windows/Desktop/repository/Programing/Discord_bot/Wether_Function')
-from Weather_data import get_weather_data, get_now_weather
+from Weather_data import *
 
 class Forecast(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @commands.command(name = "날씨")
+    @commands.command(name="날씨")
     async def weather(self, ctx):
-        # '⚙️' 이모지로 반응
         loading_emoji = '⚙️'
         await ctx.message.add_reaction(loading_emoji)
 
-        now_weather_data = get_now_weather()
-        # '⚙️' 이모지 삭제 및 '✅' 이모지로 교체
         await ctx.message.remove_reaction(loading_emoji, ctx.me)
         success_reaction = '✅'
         await ctx.message.add_reaction(success_reaction)
 
-        #현제 날씨 출력
-        embed = Embed(title = "NOW WEATHER", description="조회위치 : 울산광역시 중구 태화동", color=0x00aaff) #TODO 지역설정 할때 유동적으로 바꾸게 하기
+        embed = discord.Embed(title="NOW WEATHER", description="조회위치 : 울산광역시 중구 태화동", color=0x00aaff)
 
+        # 현재 날씨 데이터를 embed에 추가하는 로직 작성
 
     @commands.command(name="일기예보")
     async def forecast(self, ctx):
         loading_emoji = '⚙️'
         await ctx.message.add_reaction(loading_emoji)
 
-        forecast_data = get_weather_data()
+        forecast_data = get_weather_Forecast_data(load_api_key())
+        print(forecast_data)
 
         await ctx.message.remove_reaction(loading_emoji, ctx.me)
         success_reaction = '✅'
         await ctx.message.add_reaction(success_reaction)
 
-        embed = Embed(title="Weather Forecast", description="조회위치: 울산광역시 중구 태화동", color=0x00aaff)
+        embed = discord.Embed(title="Weather Forecast", description="조회위치: 울산광역시 중구 태화동", color=0x00aaff)
+        print("임베드 설정했음")
 
         for time, data in forecast_data.items():
-            field_value = f"기온: {data['TMP']}°C\n강수확률: {data['POP']}%\n습도: {data['REH']}%\n강우량: {data['RN1']}mm"
+            field_value = (
+                f"기온: {data['TMP']}°C\n"
+                f"하늘코드: {data['SKY']}\n"
+                f"강수확률: {data['POP']}%\n"
+                f"습도: {data['REH']}%"
+            )
 
-            embed.add_field(name=f"{time}00", value=field_value, inline=False)
+            embed.add_field(name=f"예보시간 - {time}:00", value=field_value, inline=False)
+            print("임베드에 필드값 추가했음")
 
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Forecast(bot))
