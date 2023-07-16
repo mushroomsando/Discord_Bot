@@ -8,7 +8,7 @@ today_date = today.strftime("%Y%m%d")
 hour = now.hour - 1
 
 def load_api_key():
-    with open('Wether_Function\\api_code.txtt', 'r') as file:
+    with open('Wether_Function\\api_code.txt', 'r') as file:
         return file.read().strip()
 
 def get_weather_data():
@@ -24,7 +24,7 @@ def get_weather_data():
         base_time = "0200"  # 내일 2시부터 데이터 제공
     else:
         base_date = today_date
-        base_time = str(hour).zfill(2) + "00"
+        base_time = str(hour - 1).zfill(2) + "00"
 
     url = 'http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst'
     params = {
