@@ -12,12 +12,12 @@ bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 
 # token file load
 def load_token():
-    with open('token.txt', 'r') as file:
+    with open('Discord_bot\\token.txt', 'r') as file:
         return file.read().strip()
 
 # Cogs load
 async def load_cogs():
-    for filename in os.listdir('cogs'):
+    for filename in os.listdir('Discord_bot\\cogs'):
         if filename.endswith('.py'):
             try:
                 await bot.load_extension(f'cogs.{filename[:-3]}')
