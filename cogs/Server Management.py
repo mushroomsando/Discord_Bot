@@ -24,6 +24,7 @@ class Utilities(commands.Cog):
     async def user_kick(self, ctx, member: discord.Member):
         await member.kick()  # 멤버를 킥
         embed = discord.Embed(title="⚙️ COMPLETE", description=f"{member.mention}님이 서버에서 추방되었습니다.", color=0x00aaff)
+        embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
         await ctx.reply(embed=embed)
     
     @commands.command(name="밴")
@@ -31,6 +32,7 @@ class Utilities(commands.Cog):
     async def user_ban(self, ctx, member: discord.Member):
         await member.ban()  # 멤버를 밴
         embed = discord.Embed(title="⚙️ COMPLETE", description=f"{member.mention}님이 서버에서 밴 되었습니다.", color=0x00aaff)
+        embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
         await ctx.reply(embed=embed)  # 밴 완료 메시지 전송
     
     @commands.command(name="언벤")
@@ -42,21 +44,30 @@ class Utilities(commands.Cog):
             if user.id == member_id:
                 await ctx.guild.unban(user)
                 embed = discord.Embed(title="⚙️ COMPLETE", description=f"{member_id}님이 서버에서 언벤되었습니다.", color=0x00aaff)
+                embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
                 await ctx.reply(embed=embed)  # 언벤 완료 메시지 전송
                 return
         embed = discord.Embed(title="⚙️ INFO", description=f"해당 유저는 서버에서 밴되어 있지 않습니다.", color=0xffdd00)
+        embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
         await ctx.reply(embed=embed) # 밴되어 있지 않은 경우 메시지 전송
 
-    @commands.command(name="서버정보")
+    @commands.command(name="서버정보") #TODO 지역 선택 기능과 연계
     async def server_info(self, ctx):
         server = ctx.guild
-        members = server.member_count
-        channels = len(server.channels)
         roles = len(server.roles)
-        embed = discord.Embed(title="서버 정보", color=discord.Color.blue())
-        embed.add_field(name="멤버 수", value=members, inline=False)
-        embed.add_field(name="채널 수", value=channels, inline=False)
-        embed.add_field(name="역할 수", value=roles, inline=False)
+        human_members = sum(not member.bot for member in server.members)
+        bot_members = sum(member.bot for member in server.members)
+
+        voice_channels = sum(isinstance(channel, discord.VoiceChannel) for channel in server.channels)
+        text_channels = sum(isinstance(channel, discord.TextChannel) for channel in server.channels)
+
+        embed = discord.Embed(title=f"⚙️ SEVER INFO - {server.name}", color=discord.Color.blue())
+        embed.add_field(name="🗓️ 서버 생성일자", value=server.created_at.strftime("%Y년%m월%d일 %H시%M분%S초 에 생성"), inline=False)
+        embed.add_field(name=f"👥 멤버 수 - 총 {human_members + bot_members}명", value=f"👤 유저: {human_members}명\n🤖 봇: {bot_members}개", inline=False)
+        embed.add_field(name=f"📻 채널 수 - 총 {voice_channels + text_channels}개", value=f"📞 음성채널: {voice_channels}개\n💬 채팅채널: {text_channels}개", inline=False)
+        embed.add_field(name="🪪 역할 수", value=f"{roles}개", inline=False)
+        embed.add_field(name="⛅ 일기예보 조회위치", value="개발중...")
+        embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
         await ctx.reply(embed=embed)  # Embed 형식으로 서버 정보 전송
     
     #=========예외처리 부분=========
@@ -88,6 +99,8 @@ class Utilities(commands.Cog):
             embed = discord.Embed(title="⚙️ ERROR", description="더이상 청소할 메시지가 없습니다.", color=0xff0000)
             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.reply(embed=embed)
+        elif isinstance(error, commands.MissingPermissions):
+            return
         else:
             embed = discord.Embed(title="⚙️ ERROR", description="음... 무언가 잘못되었습니다. \n 여러분의 잘못이 아니니 걱정 마세요.", color=0xff0000)
             embed.add_field(name="오류내용", value=str(error))
@@ -101,6 +114,8 @@ class Utilities(commands.Cog):
             embed.add_field(name="올바른 사용법", value="!킥 [유저멘션]", inline=False)
             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.reply(embed=embed)
+        elif isinstance(error, commands.MissingPermissions):
+            return
         else:
             embed = discord.Embed(title="⚙️ ERROR", description="음... 무언가 잘못되었습니다. \n 여러분의 잘못이 아니니 걱정 마세요.", color=0xff0000)
             embed.add_field(name="오류내용", value=str(error))
@@ -114,6 +129,8 @@ class Utilities(commands.Cog):
             embed.add_field(name="올바른 사용법", value="!밴 [유저맨션]", inline=False)
             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.reply(embed=embed)
+        elif isinstance(error, commands.MissingPermissions):
+            return
         else:
             embed = discord.Embed(title="⚙️ ERROR", description="음... 무언가 잘못되었습니다. \n 여러분의 잘못이 아니니 걱정 마세요.", color=0xff0000)
             embed.add_field(name="오류내용", value=str(error))
@@ -127,6 +144,8 @@ class Utilities(commands.Cog):
             embed.add_field(name="올바른 사용법", value="!언벤 [유저 ID]", inline=False)
             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.reply(embed=embed)
+        elif isinstance(error, commands.MissingPermissions):
+            return
         else:
             embed = discord.Embed(title="⚙️ ERROR", description="음... 무언가 잘못되었습니다. \n 여러분의 잘못이 아니니 걱정 마세요.", color=0xff0000)
             embed.add_field(name="오류내용", value=str(error))
