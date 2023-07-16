@@ -1,41 +1,82 @@
 import requests
-import json
 from datetime import datetime, timedelta
+from collections import defaultdict
+import json
 
-now = datetime.now()
-today = now.date()
+today = datetime.today()
 today_date = today.strftime("%Y%m%d")
-hour = now.hour - 1
 
 def load_api_key():
     with open('Wether_Function\\api_code.txt', 'r') as file:
         return file.read().strip()
 
-def get_weather_data():
-    # 현재로부터 3시간 후의 시간 계산
-    forecast_time = now + timedelta(hours=3)
-    forecast_date = forecast_time.date()
+def get_base_time():
+    current_time = datetime.now()
+    current_hour = current_time.hour
+
+    if current_hour < 2:
+        base_time = "2300"
+    elif current_hour < 5:
+        base_time = "0200"
+    elif current_hour < 8:
+        base_time = "0500"
+    elif current_hour < 11:
+        base_time = "0800"
+    elif current_hour < 14:
+        base_time = "1100"
+    elif current_hour < 17:
+        base_time = "1400"
+    elif current_hour < 20:
+        base_time = "1700"
+    else:
+        base_time = "2000"
+
+    return base_time
+
+def get_current_base_time():
+    now = datetime.now()
+    hour = now.hour
+    minute = now.minute
+
+    update_time = "0030 0130 0230 0330 0430 0530 0630 0730 0830 0930 1030 1130 1230 1330 1430 1530 1630 1730 1830 " \
+                  "1930 2030 2130 2230 2330".split()
+
+    if (hour < 1) and (minute < 30):
+        base_time = update_time[23]
+    elif (hour >= 1) and (minute < 30):
+        base_time = update_time[hour - 1]
+    else:
+        base_time = update_time[hour]
+
+    return base_time
+
+def get_weather_Forecast_data(api_key):
+    # 현재 시간 설정
+    now = datetime.now()
+    base_time = get_base_time()
+    hour = now.hour - 1
+    yesterday = today - timedelta(days=1)
+    yesterday_date = yesterday.strftime("%Y%m%d")
+
+    # 현재로부터 6시간 후의 시간 계산
+    forecast_time = now + timedelta(hours=5)
+    forecast_date = forecast_time.strftime("%Y%m%d")
     forecast_hour = forecast_time.hour
 
-    # 요청할 날짜와 시간 설정
-    if forecast_date > today:
-        # 내일로 넘어간 경우
-        base_date = forecast_date.strftime("%Y%m%d")
-        base_time = "0200"  # 내일 2시부터 데이터 제공
-    else:
-        base_date = today_date
-        base_time = str(hour - 1).zfill(2) + "00"
+    # 내일의 날짜 계산
+    tomorrow = now + timedelta(days=1)
+    tomorrow_date = tomorrow.strftime("%Y%m%d")
 
     url = 'http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst'
     params = {
-        'serviceKey': load_api_key(),
+        'serviceKey': api_key,
         'pageNo': '1',
         'numOfRows': '1000',
         'dataType': 'JSON',
-        'base_date': base_date,
+        'base_date': today_date if hour >= 2 else yesterday_date,
         'base_time': base_time,
-        'nx': 102, #TODO 데이더 설정
-        'ny': 84 #TODO 데이터 설정
+        'nx': 102,
+        'ny': 84
     }
 
     # API 호출
@@ -44,7 +85,7 @@ def get_weather_data():
 
     # 필요한 데이터 추출
     items = res_json['response']['body']['items']['item']
-    forecast_data = {}  # 예보 데이터 저장용 딕셔너리
+    forecast_data = defaultdict(dict)  # 예보 데이터 저장용 딕셔너리
 
     for item in items:
         fcst_date = item['fcstDate']
@@ -52,29 +93,25 @@ def get_weather_data():
         category = item['category']
         value = item['fcstValue']
 
-        # 현재 시간부터 3시간 후까지의 데이터만 저장
-        if forecast_date > today or (today_date == fcst_date and hour <= int(fcst_time) <= forecast_hour):
-            if fcst_time not in forecast_data:
-                forecast_data[fcst_time] = {}
+        if (fcst_date == today_date and hour <= int(fcst_time) <= forecast_hour) or (fcst_date == forecast_date and int(fcst_time) <= forecast_hour):
             forecast_data[fcst_time][category] = value
 
     return forecast_data
 
-def get_now_weather():
-    base_time = str(hour) + "00"
+def get_now_weather(api_key):
     url = 'http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst'
     params = {
-        'serviceKey': 'El5PQ9Ale6laNakJRp2x/24xBntXd3ghMdsKTGAuW1+Z5VLyIfw5eY8RwMDpklrCNw3YuffZ1ExyhA5ZLANvmg==',
+        'serviceKey': api_key,
         'pageNo': '1',
         'numOfRows': '1000',
         'dataType': 'JSON',
         'base_date': today_date,
-        'base_time': base_time,
+        'base_time': get_current_base_time(),
         'nx': 102,
         'ny': 84
     }
 
     response = requests.get(url, params=params)
-    data = response.json()
+    data = json.loads(response.content)
 
     return data
