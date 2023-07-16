@@ -2,17 +2,16 @@ import requests
 import json
 from datetime import datetime, timedelta
 
+now = datetime.now()
+today = now.date()
+today_date = today.strftime("%Y%m%d")
+hour = now.hour - 1
+
 def load_api_key():
-    with open('Wether_Function\\api_code.txt', 'r') as file:
+    with open('Wether_Function\\api_code.txtt', 'r') as file:
         return file.read().strip()
 
 def get_weather_data():
-    # 현재 시간 설정
-    now = datetime.now()
-    today = now.date()
-    today_date = today.strftime("%Y%m%d")
-    hour = now.hour - 1
-
     # 현재로부터 3시간 후의 시간 계산
     forecast_time = now + timedelta(hours=3)
     forecast_date = forecast_time.date()
@@ -60,3 +59,22 @@ def get_weather_data():
             forecast_data[fcst_time][category] = value
 
     return forecast_data
+
+def get_now_weather():
+    base_time = str(hour) + "00"
+    url = 'http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst'
+    params = {
+        'serviceKey': 'El5PQ9Ale6laNakJRp2x/24xBntXd3ghMdsKTGAuW1+Z5VLyIfw5eY8RwMDpklrCNw3YuffZ1ExyhA5ZLANvmg==',
+        'pageNo': '1',
+        'numOfRows': '1000',
+        'dataType': 'JSON',
+        'base_date': today_date,
+        'base_time': base_time,
+        'nx': 102,
+        'ny': 84
+    }
+
+    response = requests.get(url, params=params)
+    data = response.json()
+
+    return data

@@ -12,7 +12,7 @@ bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 
 # token file load
 def load_token():
-    with open('Discord_bot\\token.txt', 'r') as file:
+    with open('token.txt', 'r') as file:
         return file.read().strip()
 
 # Cogs load
