@@ -40,7 +40,9 @@ class Help(commands.Cog):
                     embed.add_field(name="사용법", value=command_data["usage"])
                     await ctx.reply(embed=embed)
                     return
-            print("없따!")
+            embed = discord.Embed(title="⚠️ ERROR", description="해당 명령어에 대한 정보를 찾을 수 없어요.", color=0xff0000)
+            embed.set_footer(text = "Copyright (C) 2023 By Mushroomsando. All right reserved.")
+            await ctx.reply(embed=embed)
         else:
             embed = discord.Embed(title="ℹ️ INFO", description="이 명령어는 DM에서만 사용할 수 있어요.", color=0xffdd00)
             embed.set_footer(text = "Copyright (C) 2023 By Mushroomsando. All right reserved.")
