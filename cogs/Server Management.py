@@ -9,7 +9,7 @@ class Utilities(commands.Cog):
     @commands.command(name="채팅청소")
     @commands.has_permissions(manage_messages=True)
     async def message_clear(self, ctx, amount: int):
-        embed = discord.Embed(title="⚙️ COMPLETE", description=f"{amount}개의 메시지가 청소되었습니다.", color=0x00aaff)
+        embed = discord.Embed(title="🛠️ COMPLETE", description=f"{amount}개의 메시지가 청소되었습니다.", color=0x00aaff)
         embed.set_footer(text="이 메시지는 3초 뒤에 자동으로 삭제됩니다...")
         await ctx.channel.purge(limit=amount + 1)  # amount + 1 만큼의 메시지 삭제
 
@@ -23,7 +23,7 @@ class Utilities(commands.Cog):
     @commands.has_permissions(kick_members=True)
     async def user_kick(self, ctx, member: discord.Member):
         await member.kick()  # 멤버를 킥
-        embed = discord.Embed(title="⚙️ COMPLETE", description=f"{member.mention}님이 서버에서 추방되었습니다.", color=0x00aaff)
+        embed = discord.Embed(title="🛠️ COMPLETE", description=f"{member.mention}님이 서버에서 추방되었습니다.", color=0x00aaff)
         embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
         await ctx.reply(embed=embed)
     
@@ -31,7 +31,7 @@ class Utilities(commands.Cog):
     @commands.has_permissions(ban_members=True)
     async def user_ban(self, ctx, member: discord.Member):
         await member.ban()  # 멤버를 밴
-        embed = discord.Embed(title="⚙️ COMPLETE", description=f"{member.mention}님이 서버에서 밴 되었습니다.", color=0x00aaff)
+        embed = discord.Embed(title="🛠️ COMPLETE", description=f"{member.mention}님이 서버에서 밴 되었습니다.", color=0x00aaff)
         embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
         await ctx.reply(embed=embed)  # 밴 완료 메시지 전송
     
@@ -43,7 +43,7 @@ class Utilities(commands.Cog):
             user = ban_entry.user
             if user.id == member_id:
                 await ctx.guild.unban(user)
-                embed = discord.Embed(title="⚙️ COMPLETE", description=f"{member_id}님이 서버에서 언벤되었습니다.", color=0x00aaff)
+                embed = discord.Embed(title="🛠️ COMPLETE", description=f"{member_id}님이 서버에서 언벤되었습니다.", color=0x00aaff)
                 embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
                 await ctx.reply(embed=embed)  # 언벤 완료 메시지 전송
                 return
@@ -61,7 +61,7 @@ class Utilities(commands.Cog):
         voice_channels = sum(isinstance(channel, discord.VoiceChannel) for channel in server.channels)
         text_channels = sum(isinstance(channel, discord.TextChannel) for channel in server.channels)
 
-        embed = discord.Embed(title=f"⚙️ SEVER INFO - {server.name}", color=discord.Color.blue())
+        embed = discord.Embed(title=f"🛠️ SEVER INFO - {server.name}", color=discord.Color.blue())
         embed.add_field(name="🗓️ 서버 생성일자", value=server.created_at.strftime("%Y년%m월%d일 %H시%M분%S초 에 생성"), inline=False)
         embed.add_field(name=f"👥 멤버 수 - 총 {human_members + bot_members}명", value=f"👤 유저: {human_members}명\n🤖 봇: {bot_members}개", inline=False)
         embed.add_field(name=f"📻 채널 수 - 총 {voice_channels + text_channels}개", value=f"📞 음성채널: {voice_channels}개\n💬 채팅채널: {text_channels}개", inline=False)

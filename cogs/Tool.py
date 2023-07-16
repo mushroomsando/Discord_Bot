@@ -8,9 +8,9 @@ class Tool(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @commands.command(name="현제시간")
+    @commands.command(name="현재시간")
     async def now_time(self, ctx):
-        embed = discord.Embed(title="🛠️ 현제 시간",description=f"현제시간은 {now} 입니다",color=0x00aaff)
+        embed = discord.Embed(title="⏰ 현재 시간",description=f"현재 시간은 {now} 입니다",color=0x00aaff)
         embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
         await ctx.reply(embed=embed)
     
