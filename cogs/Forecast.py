@@ -40,52 +40,51 @@
 기상청 API에서 기상특보 정보 받아오기
     이건 연구중...
 '''
-from discord import Embed, Color
+from discord import Embed
 from discord.ext import commands
 import sys
 sys.path.append('C:/Users/windows/Desktop/repository/Programing/Discord_bot/Wether_Function')
-from Weather_data import get_weather_data
+from Weather_data import get_weather_data, get_now_weather
 
 class Forecast(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    @commands.command(name="!일기예보")
-    async def forecast(self, ctx):
+    
+    @commands.command(name = "날씨")
+    async def weather(self, ctx):
         # '⚙️' 이모지로 반응
         loading_emoji = '⚙️'
         await ctx.message.add_reaction(loading_emoji)
 
-        forecast_data = get_weather_data()
-
+        now_weather_data = get_now_weather()
         # '⚙️' 이모지 삭제 및 '✅' 이모지로 교체
         await ctx.message.remove_reaction(loading_emoji, ctx.me)
         success_reaction = '✅'
         await ctx.message.add_reaction(success_reaction)
 
-        # 예보 출력
-        embed = Embed(title="Weather Forecast", color=Color.blue())
+        #현제 날씨 출력
+        embed = Embed(title = "NOW WEATHER", description="조회위치 : 울산광역시 중구 태화동", color=0x00aaff) #TODO 지역설정 할때 유동적으로 바꾸게 하기
+
+
+    @commands.command(name="일기예보")
+    async def forecast(self, ctx):
+        loading_emoji = '⚙️'
+        await ctx.message.add_reaction(loading_emoji)
+
+        forecast_data = get_weather_data()
+
+        await ctx.message.remove_reaction(loading_emoji, ctx.me)
+        success_reaction = '✅'
+        await ctx.message.add_reaction(success_reaction)
+
+        embed = Embed(title="Weather Forecast", description="조회위치: 울산광역시 중구 태화동", color=0x00aaff)
+
         for time, data in forecast_data.items():
-            embed.add_field(name="Time", value=f"{time}00", inline=True)
-            embed.add_field(name="Temperature", value=f"{data['TMP']}°C", inline=True)
+            field_value = f"기온: {data['TMP']}°C\n강수확률: {data['POP']}%\n습도: {data['REH']}%\n강우량: {data['RN1']}mm"
 
-            sky_code = int(data['SKY'])
-            if sky_code == 1:
-                sky_status = "맑음"
-            elif sky_code == 3:
-                sky_status = "구름 조금"
-            elif sky_code == 4:
-                sky_status = "흐림"
-            else:
-                sky_status = "알 수 없음"
-
-            embed.add_field(name="Sky", value=sky_status, inline=True)
-            embed.add_field(name="Rain Probability", value=f"{data['POP']}%", inline=True)
-            embed.add_field(name="Humidity", value=f"{data['REH']}%", inline=True)
-            embed.add_field(name="\u200b", value="\u200b", inline=False)  # 빈 필드 추가 (디자인 목적)
+            embed.add_field(name=f"{time}00", value=field_value, inline=False)
 
         await ctx.send(embed=embed)
 
-print("PASS")
 async def setup(bot):
     await bot.add_cog(Forecast(bot))
