@@ -1,117 +1,160 @@
 import requests
-from datetime import datetime, timedelta
-from collections import defaultdict
 import json
 
-today = datetime.today()
-today_date = today.strftime("%Y%m%d")
+def get_ultra_short_live_check_raw_data(serviceKey,Lookup_date, Lookup_time, nx, ny):
+    """
+    기상청 API 에서 초단기 실황을 조회하는 함수
 
-def load_api_key():
-    with open('Wether_Function\\api_code.txt', 'r') as file:
-        return file.read().strip()
+    Args:
+        serviceKey (str): API 인증 키.
+        lookup_date (str): 조회할 기준 날짜 (YYYYMMDD 형식).
+        lookup_time (datetime.time): 조회할 기준 시간 (datetime.time 객체).
+        nx (int): X 좌표 값.
+        ny (int): Y 좌표 값.
 
-def get_base_time():
-    current_time = datetime.now()
-    current_hour = current_time.hour
+    Returns:
+        dict: 조회된 데이터를 딕셔너리 형태로 반환.
+    """
+    try:
+        url = 'http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst'
+        params = {
+            'serviceKey': serviceKey,
+            'pageNo': '1',
+            'numOfRows': '7',
+            'dataType': 'JSON',
+            'base_date': Lookup_date,
+            'base_time': str(Lookup_time.hour - 1) + "00",
+            'nx': nx,
+            'ny': ny
+        }
 
-    if current_hour < 2:
-        base_time = "2300"
-    elif current_hour < 5:
-        base_time = "0200"
-    elif current_hour < 8:
-        base_time = "0500"
-    elif current_hour < 11:
-        base_time = "0800"
-    elif current_hour < 14:
-        base_time = "1100"
-    elif current_hour < 17:
-        base_time = "1400"
-    elif current_hour < 20:
-        base_time = "1700"
-    else:
-        base_time = "2000"
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
 
-    return base_time
+        return data
+    
+    except requests.exceptions.RequestException as e:  # 추가: 네트워크 연결 오류 처리
+        print("Error occurred during the API request:", e)
+        return None
+    except ValueError as e:  # 추가: JSON 디코딩 오류 처리
+        print("Error occurred while decoding JSON data:", e)
+        return None
 
-def get_current_base_time():
-    now = datetime.now()
-    hour = now.hour
-    minute = now.minute
+def get_short_term_forecast_inquiry_raw_data(serviceKey, Lookup_date, Lookup_time, nx, ny):
+    """
+    기상청 API 에서 단기예보를 조회하는 함수
 
-    update_time = "0030 0130 0230 0330 0430 0530 0630 0730 0830 0930 1030 1130 1230 1330 1430 1530 1630 1730 1830 " \
-                  "1930 2030 2130 2230 2330".split()
+    Args:
+        serviceKey (str): API 인증 키.
+        lookup_date (str): 조회할 기준 날짜 (YYYYMMDD 형식).
+        lookup_time (int): 조회할 기준 시간 (0 ~ 23 사이의 정수).
+        nx (int): X 좌표 값.
+        ny (int): Y 좌표 값.
 
-    if (hour < 1) and (minute < 30):
-        base_time = update_time[23]
-    elif (hour >= 1) and (minute < 30):
-        base_time = update_time[hour - 1]
-    else:
-        base_time = update_time[hour]
+    Returns:
+        dict: 조회된 데이터를 딕셔너리 형태로 반환.
+    """
+    try:
+        Lookup_time = Lookup_time.hour
+        if Lookup_time < 2:
+            base_time = "2300"
+        elif Lookup_time < 5:
+            base_time = "0200"
+        elif Lookup_time < 8:
+            base_time = "0500"
+        elif Lookup_time < 11:
+            base_time = "0800"
+        elif Lookup_time < 14:
+            base_time = "1100"
+        elif Lookup_time < 17:
+            base_time = "1400"
+        elif Lookup_time < 20:
+            base_time = "1700"
+        else:
+            base_time = "2000"
 
-    return base_time
+        url = 'http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst'
+        params = {
+            'serviceKey': serviceKey,
+            'pageNo': '1',
+            'numOfRows': '96',
+            'dataType': 'JSON',
+            'base_date': Lookup_date,
+            'base_time': base_time,
+            'nx': nx,
+            'ny': ny
+        }
 
-def get_weather_Forecast_data(api_key):
-    # 현재 시간 설정
-    now = datetime.now()
-    base_time = get_base_time()
-    hour = now.hour - 1
-    yesterday = today - timedelta(days=1)
-    yesterday_date = yesterday.strftime("%Y%m%d")
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
 
-    # 현재로부터 6시간 후의 시간 계산
-    forecast_time = now + timedelta(hours=5)
-    forecast_date = forecast_time.strftime("%Y%m%d")
-    forecast_hour = forecast_time.hour
+        return data
+    
+    except requests.exceptions.RequestException as e:  # 추가: 네트워크 연결 오류 처리
+        print("Error occurred during the API request:", e)
+        return None
+    except ValueError as e:  # 추가: JSON 디코딩 오류 처리
+        print("Error occurred while decoding JSON data:", e)
+        return None
 
-    # 내일의 날짜 계산
-    tomorrow = now + timedelta(days=1)
-    tomorrow_date = tomorrow.strftime("%Y%m%d")
+def ultra_short_live_chek(raw_data):
+    """
+    초단기 실황 데이터를 가공하는 함수
 
-    url = 'http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst'
-    params = {
-        'serviceKey': api_key,
-        'pageNo': '1',
-        'numOfRows': '1000',
-        'dataType': 'JSON',
-        'base_date': today_date if hour >= 2 else yesterday_date,
-        'base_time': base_time,
-        'nx': 102,
-        'ny': 84
-    }
+    Args:
+        raw_data (dic): 초단기 실황 데이터를 포함한 딕셔너리.
 
-    # API 호출
-    res = requests.get(url, params=params)
-    res_json = json.loads(res.content)
+    Returns:
+        dict: {'PTY' : 'value' ...} 식으로 데이터 반환.
+    """
+    obsr_values_dict = {}
 
-    # 필요한 데이터 추출
-    items = res_json['response']['body']['items']['item']
-    forecast_data = defaultdict(dict)  # 예보 데이터 저장용 딕셔너리
-
-    for item in items:
-        fcst_date = item['fcstDate']
-        fcst_time = item['fcstTime'][:2]
+    for item in raw_data['response']['body']['items']['item']:
         category = item['category']
-        value = item['fcstValue']
+        obsr_value = item['obsrValue']
+        obsr_values_dict[category] = obsr_value
+    
+    return obsr_values_dict
 
-        if (fcst_date == today_date and hour <= int(fcst_time) <= forecast_hour) or (fcst_date == forecast_date and int(fcst_time) <= forecast_hour):
-            forecast_data[fcst_time][category] = value
+def short_term_forecast(raw_data):
+    """
+    단기예보 데이터를 가공하는 함수
 
-    return forecast_data
+    Args:
+        raw_data (dict): 단기 예보 데이터를 포함한 딕셔너리.
 
-def get_now_weather(api_key):
-    url = 'http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst'
-    params = {
-        'serviceKey': api_key,
-        'pageNo': '1',
-        'numOfRows': '1000',
-        'dataType': 'JSON',
-        'base_date': today_date,
-        'base_time': get_current_base_time(),
-        'nx': 102,
-        'ny': 84
-    }
+    Returns:
+        dict: 카테고리별로 단기예보 데이터를 저장한 딕셔너리.
+            딕셔너리의 형태는 다음과 같습니다:
+            {
+                '카테고리1': {
+                    'fcstValue': '예보값',
+                    'fcstDate': '예보날짜',
+                    'fcstTime': '예보시간'
+                },
+                '카테고리2': {
+                    'fcstValue': '예보값',
+                    'fcstDate': '예보날짜',
+                    'fcstTime': '예보시간'
+                },
+                ...
+            }
+    """
+    # 'item'에 해당하는 데이터들을 카테고리별로 저장하는 딕셔너리 생성
+    forecast_data_dict = {}
 
-    response = requests.get(url, params=params)
-    data = json.loads(response.content)
+    # 'item' 리스트 순회하며 카테고리별로 데이터 추가
+    for item in raw_data['response']['body']['items']['item']:
+        category = item['category']
+        fcst_value = item['fcstValue']
+        fcst_date = item['fcstDate']
+        fcst_time = item['fcstTime']
+        forecast_data_dict[category] = {
+            'fcstValue': fcst_value,
+            'fcstDate': fcst_date,
+            'fcstTime': fcst_time
+        }
 
-    return data
+    return forecast_data_dict
