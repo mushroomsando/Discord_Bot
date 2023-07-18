@@ -71,18 +71,6 @@ class Utilities(commands.Cog):
         await ctx.reply(embed=embed)  # Embed 형식으로 서버 정보 전송
     
     #=========예외처리 부분=========
-
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.MissingPermissions):
-            embed = discord.Embed(title="⚙️ ERROR", description="이 명령어를 사용하려면 서버 관리 권한이 필요합니다.", color=0xff0000)
-            embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
-            await ctx.reply(embed=embed)
-        elif isinstance(error, discord.errors.Forbidden):
-            embed = discord.Embed(title="⚙️ ERROR", description="봇이 서버를 관리할 수 있는 권한이 없습니다.", color=0xff0000)
-            embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
-            await ctx.reply(embed=embed)
- 
     @message_clear.error #채팅청소 예외처리
     async def clearerror(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
@@ -100,7 +88,9 @@ class Utilities(commands.Cog):
             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.reply(embed=embed)
         elif isinstance(error, commands.MissingPermissions):
-            return
+            embed = discord.Embed(title="⚙️ ERROR", description="이 명령어를 사용하려면 서버 관리 권한이 필요합니다.", color=0xff0000)
+            embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+            await ctx.reply(embed=embed)
         else:
             embed = discord.Embed(title="⚙️ ERROR", description="음... 무언가 잘못되었습니다. \n 여러분의 잘못이 아니니 걱정 마세요.", color=0xff0000)
             embed.add_field(name="오류내용", value=str(error))
@@ -115,7 +105,9 @@ class Utilities(commands.Cog):
             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.reply(embed=embed)
         elif isinstance(error, commands.MissingPermissions):
-            return
+            embed = discord.Embed(title="⚙️ ERROR", description="이 명령어를 사용하려면 서버 관리 권한이 필요합니다.", color=0xff0000)
+            embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+            await ctx.reply(embed=embed)
         else:
             embed = discord.Embed(title="⚙️ ERROR", description="음... 무언가 잘못되었습니다. \n 여러분의 잘못이 아니니 걱정 마세요.", color=0xff0000)
             embed.add_field(name="오류내용", value=str(error))
@@ -130,7 +122,9 @@ class Utilities(commands.Cog):
             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.reply(embed=embed)
         elif isinstance(error, commands.MissingPermissions):
-            return
+            embed = discord.Embed(title="⚙️ ERROR", description="이 명령어를 사용하려면 서버 관리 권한이 필요합니다.", color=0xff0000)
+            embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+            await ctx.reply(embed=embed)
         else:
             embed = discord.Embed(title="⚙️ ERROR", description="음... 무언가 잘못되었습니다. \n 여러분의 잘못이 아니니 걱정 마세요.", color=0xff0000)
             embed.add_field(name="오류내용", value=str(error))
@@ -145,7 +139,9 @@ class Utilities(commands.Cog):
             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.reply(embed=embed)
         elif isinstance(error, commands.MissingPermissions):
-            return
+            embed = discord.Embed(title="⚙️ ERROR", description="이 명령어를 사용하려면 서버 관리 권한이 필요합니다.", color=0xff0000)
+            embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+            await ctx.reply(embed=embed)
         else:
             embed = discord.Embed(title="⚙️ ERROR", description="음... 무언가 잘못되었습니다. \n 여러분의 잘못이 아니니 걱정 마세요.", color=0xff0000)
             embed.add_field(name="오류내용", value=str(error))
