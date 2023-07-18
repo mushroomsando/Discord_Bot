@@ -1,5 +1,4 @@
 import requests
-import json
 
 def get_ultra_short_live_check_raw_data(serviceKey,Lookup_date, Lookup_time, nx, ny):
     """
@@ -90,7 +89,7 @@ def get_short_term_forecast_inquiry_raw_data(serviceKey, Lookup_date, Lookup_tim
         response.raise_for_status()
         data = response.json()
 
-        return data
+        return data, base_time
     
     except requests.exceptions.RequestException as e:  # 추가: 네트워크 연결 오류 처리
         print("Error occurred during the API request:", e)
@@ -158,3 +157,34 @@ def short_term_forecast(raw_data):
         }
 
     return forecast_data_dict
+
+def get_weather_code(data, data_type):
+    pty_code = data
+    for item in data['response']['body']['items']['item']:
+        if item['category'] == 'PTY':
+            pty_code = item['obsrValue']
+            break
+
+    emoji_mapping = {
+        '0': '☀️',   # 없음
+        '1': '🌧️',   # 비
+        '2': '🌨️',   # 비/눈
+        '3': '❄️',   # 눈
+        '5': '🌦️',   # 빗방울
+        '6': '🌧️❄️',  # 빗방울눈날림
+        '7': '🌨️',   # 눈날림 (눈으로 대체)
+    }
+
+    text = {
+        '0':'맑음',
+        '1':'비',
+        '2':'비/눈',
+        '3':'눈',
+        '5':'빗방울',
+        '6':'빗방울눈날림',
+        '7':'눈날림'
+    }
+    if data_type == 1:
+        return emoji_mapping.get(pty_code, '⚠️')
+    elif data_type == 2:
+        return text.get(pty_code, "?")
