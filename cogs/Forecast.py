@@ -43,53 +43,75 @@
 import discord
 from discord.ext import commands
 import sys
-sys.path.append('C:/Users/windows/Desktop/repository/Programing/Discord_bot/Wether_Function')
-from Weather_data import *
+import traceback
+import math
+sys.path.append('C:/Users/windows/Desktop/repository/Programing/Discord_bot/Weather_Function')
+import Weather_data as Wd
+from datetime import datetime
+
+today = datetime.today()
+today_date = today.strftime("%Y%m%d")
+now = datetime.now()
 
 class Forecast(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
     @commands.command(name="날씨")
-    async def weather(self, ctx):
-        loading_emoji = '⚙️'
-        await ctx.message.add_reaction(loading_emoji)
+    async def now_weather(self, ctx):
+        try:
+            weather_data = Wd.get_ultra_short_live_check_raw_data(open("Weather_Function\\api_code.txt", "r"), today_date, now, 102, 84)
+            process_data = Wd.ultra_short_live_chek(weather_data)
+            # wind = float(process_data['UUU']) + float(process_data['VVV']) / 2
+            # wind_direction = math.trunc((int(process_data['VEC']) + 22.5 * 0.5) / 22.5)
+            # print(process_data)
+            # print(wind_direction) #TODO
 
-        await ctx.message.remove_reaction(loading_emoji, ctx.me)
-        success_reaction = '✅'
-        await ctx.message.add_reaction(success_reaction)
+            loading_emoji = '⚙️'
+            await ctx.message.add_reaction(loading_emoji)
+            print("OK")
 
-        embed = discord.Embed(title="NOW WEATHER", description="조회위치 : 울산광역시 중구 태화동", color=0x00aaff)
+            success_reaction = '✅'
+            await ctx.message.add_reaction(success_reaction)
+            await ctx.message.remove_reaction(loading_emoji, ctx.me)
+            embed = discord.Embed(title = f"{Wd.get_weather_code(weather_data, 1)} NOW WEATHER \n-------------\n📌울산광역시 중구 태화동 \n\n🌡️기온\t\t\t\t🔍현재 날씨는\n{process_data['T1H']}℃\t\t\t\t\t{Wd.get_weather_code(weather_data, 1)}{Wd.get_weather_code(weather_data, 2)} 입니다.",color=0x00aaff)
+            embed.set_thumbnail(url="https://ibb.co/Tk8NQGj")
+            embed.add_field(name = "습도", value=process_data['REH'] + "%", inline=True)
+            embed.add_field(name = "바람", value="개발중 m/s", inline=True) #TODO
+            embed.add_field(name = "1시간 강수량", value=process_data['RN1'] + "mm", inline=True)
+            embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+            await ctx.reply(embed=embed)
 
-        # 현재 날씨 데이터를 embed에 추가하는 로직 작성
-
-    @commands.command(name="일기예보")
-    async def forecast(self, ctx):
-        loading_emoji = '⚙️'
-        await ctx.message.add_reaction(loading_emoji)
-
-        forecast_data = get_weather_Forecast_data(load_api_key())
-        print(forecast_data)
-
-        await ctx.message.remove_reaction(loading_emoji, ctx.me)
-        success_reaction = '✅'
-        await ctx.message.add_reaction(success_reaction)
-
-        embed = discord.Embed(title="Weather Forecast", description="조회위치: 울산광역시 중구 태화동", color=0x00aaff)
-        print("임베드 설정했음")
-
-        for time, data in forecast_data.items():
-            field_value = (
-                f"기온: {data['TMP']}°C\n"
-                f"하늘코드: {data['SKY']}\n"
-                f"강수확률: {data['POP']}%\n"
-                f"습도: {data['REH']}%"
-            )
-
-            embed.add_field(name=f"예보시간 - {time}:00", value=field_value, inline=False)
-            print("임베드에 필드값 추가했음")
-
-        await ctx.reply(embed=embed)
+        except Exception as e:
+            error_emoji = '⚠️'
+            await ctx.message.add_reaction(error_emoji)
+            error_msg = "오류가 발생했습니다:\n```\n"
+            error_msg += f"{e}\n"
+            error_msg += "".join(traceback.format_exception(type(e), e, e.__traceback__))
+            error_msg += "```"
+            await ctx.send(error_msg)
+    
+    @commands.command(name = "일기예보") #TODO
+    async def forecast_weather(self, ctx):
+        try:
+            weather_data = Wd.get_short_term_forecast_inquiry_raw_data(open("Weather_Function\\api_code.txt", "r"), today_date, now, 102, 84)
+            loading_emoji = '⚙️'
+            await ctx.message.add_reaction(loading_emoji)
+            print("OK")
+            success_reaction = '✅'
+            await ctx.message.add_reaction(success_reaction)
+            await ctx.message.remove_reaction(loading_emoji, ctx.me)
+            await ctx.reply(f"Success! raw data is : \n{Wd.short_term_forecast(weather_data)} \n{now}")
+            print("COMPELETE")
+        except Exception as e:
+            error_emoji = '⚠️'
+            await ctx.message.add_reaction(error_emoji)
+            error_msg = "오류가 발생했습니다:\n```\n"
+            error_msg += f"{e}\n"
+            error_msg += "".join(traceback.format_exception(type(e), e, e.__traceback__))
+            error_msg += "```"
+            await ctx.send(error_msg)
+    
 
 async def setup(bot):
     await bot.add_cog(Forecast(bot))
