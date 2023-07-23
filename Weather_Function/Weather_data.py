@@ -23,7 +23,7 @@ def get_ultra_short_live_check_raw_data(serviceKey,Lookup_date, Lookup_time, nx,
             'numOfRows': '8',
             'dataType': 'JSON',
             'base_date': Lookup_date,
-            'base_time': str(Lookup_time.hour - 1) + "00",
+            'base_time': str(Lookup_time.hour) + "00",
             'nx': nx,
             'ny': ny
         }
