@@ -44,6 +44,7 @@ import discord
 from discord.ext import commands
 import sys
 import traceback
+import math
 sys.path.append('C:/Users/windows/Desktop/repository/Programing/Discord_bot/Weather_Function')
 import Weather_data as Wd
 import Weather_data_process as Wp
@@ -62,20 +63,22 @@ class Forecast(commands.Cog):
         try:
             weather_data = Wd.get_ultra_short_live_check_raw_data(open("Weather_Function\\api_code.txt", "r"), today_date, now, 102, 84)
             process_data = Wd.ultra_short_live_chek(weather_data)
+            wind = process_data['VEC']
+            wind = str(math.trunc((int(wind) + 22.5 * 0.5) / 22.5))
 
             loading_emoji = '⚙️'
             await ctx.message.add_reaction(loading_emoji)
-            print("OK")
+            print(wind)
 
             success_reaction = '✅'
             await ctx.message.remove_reaction(loading_emoji, ctx.me)
             await ctx.message.add_reaction(success_reaction)
 
-            embed = discord.Embed(title = f"{Wp.get_visual_data(weather_data, 1)}NOW WEATHER\n-------------\n🚩울산광역시 중구 태화동\n\t\t\t\t\t\t\t🌡️ {process_data['T1H']}℃",color=0x00aaff)
-            embed.add_field(name = "습도", value=process_data['REH'] + "%", inline=True)
-            embed.add_field(name = "바람", value=Wp.get_visual_data(weather_data, 2)+ process_data['WSD']+ "m/s", inline=True)
-            embed.add_field(name = "1시간 강수량", value=process_data['RN1'] + "mm", inline=True)
-            embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+            embed = discord.Embed(title = f"{Wp.get_visual_data(weather_data, 1)}NOW WEATHER\n-------------\n🚩울산광역시 중구 태화동\n\t\t\t\t\t\t\t🌡️ {process_data['T1H']}℃\n\t\t\t\t\t\t👤체감{Wp.discomfort_index(float(process_data['T1H']), int(process_data['REH']), float(process_data['WSD'])):.1f}℃",color=0x00aaff)
+            embed.add_field(name = "💧습도", value=process_data['REH'] + "%", inline=True)
+            embed.add_field(name = "💨바람", value=Wp.get_visual_data(weather_data, 2)+ process_data['WSD']+ "m/s", inline=True) #기상청 홈피랑 달라요 왜지?
+            embed.add_field(name = "☔1시간 강수량", value=process_data['RN1'] + "mm", inline=True)
+            embed.set_footer(text=f"최종 업데이트: {now.month}.{now.day} {now.hour}:{now.minute}\t\t\tProvision 대한민국 기상청")
             await ctx.reply(embed=embed)
 
         except Exception as e:
