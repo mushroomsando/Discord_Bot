@@ -44,9 +44,9 @@ import discord
 from discord.ext import commands
 import sys
 import traceback
-import math
 sys.path.append('C:/Users/windows/Desktop/repository/Programing/Discord_bot/Weather_Function')
 import Weather_data as Wd
+import Weather_data_process as Wp
 from datetime import datetime
 
 today = datetime.today()
@@ -68,11 +68,12 @@ class Forecast(commands.Cog):
             print("OK")
 
             success_reaction = '✅'
-            await ctx.message.add_reaction(success_reaction)
             await ctx.message.remove_reaction(loading_emoji, ctx.me)
-            embed = discord.Embed(title = f"{Wd.get_visual_data(weather_data, 1)} NOW WEATHER \n-------------\n📌울산광역시 중구 태화동 \n\n🌡️기온\n{process_data['T1H']}℃",color=0x00aaff)
+            await ctx.message.add_reaction(success_reaction)
+
+            embed = discord.Embed(title = f"{Wp.get_visual_data(weather_data, 1)}NOW WEATHER\n-------------\n🚩울산광역시 중구 태화동\n\t\t\t\t\t\t\t🌡️ {process_data['T1H']}℃",color=0x00aaff)
             embed.add_field(name = "습도", value=process_data['REH'] + "%", inline=True)
-            embed.add_field(name = "바람", value=Wd.get_visual_data(weather_data, 2)+ process_data['WSD']+ "m/s", inline=True)
+            embed.add_field(name = "바람", value=Wp.get_visual_data(weather_data, 2)+ process_data['WSD']+ "m/s", inline=True)
             embed.add_field(name = "1시간 강수량", value=process_data['RN1'] + "mm", inline=True)
             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.reply(embed=embed)
