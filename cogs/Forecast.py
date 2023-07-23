@@ -62,10 +62,6 @@ class Forecast(commands.Cog):
         try:
             weather_data = Wd.get_ultra_short_live_check_raw_data(open("Weather_Function\\api_code.txt", "r"), today_date, now, 102, 84)
             process_data = Wd.ultra_short_live_chek(weather_data)
-            # wind = float(process_data['UUU']) + float(process_data['VVV']) / 2
-            # wind_direction = math.trunc((int(process_data['VEC']) + 22.5 * 0.5) / 22.5)
-            # print(process_data)
-            # print(wind_direction) #TODO
 
             loading_emoji = '⚙️'
             await ctx.message.add_reaction(loading_emoji)
@@ -74,10 +70,9 @@ class Forecast(commands.Cog):
             success_reaction = '✅'
             await ctx.message.add_reaction(success_reaction)
             await ctx.message.remove_reaction(loading_emoji, ctx.me)
-            embed = discord.Embed(title = f"{Wd.get_weather_code(weather_data, 1)} NOW WEATHER \n-------------\n📌울산광역시 중구 태화동 \n\n🌡️기온\t\t\t\t🔍현재 날씨는\n{process_data['T1H']}℃\t\t\t\t\t{Wd.get_weather_code(weather_data, 1)}{Wd.get_weather_code(weather_data, 2)} 입니다.",color=0x00aaff)
-            embed.set_thumbnail(url="https://ibb.co/Tk8NQGj")
+            embed = discord.Embed(title = f"{Wd.get_visual_data(weather_data, 1)} NOW WEATHER \n-------------\n📌울산광역시 중구 태화동 \n\n🌡️기온\n{process_data['T1H']}℃",color=0x00aaff)
             embed.add_field(name = "습도", value=process_data['REH'] + "%", inline=True)
-            embed.add_field(name = "바람", value="개발중 m/s", inline=True) #TODO
+            embed.add_field(name = "바람", value=Wd.get_visual_data(weather_data, 2)+ process_data['WSD']+ "m/s", inline=True)
             embed.add_field(name = "1시간 강수량", value=process_data['RN1'] + "mm", inline=True)
             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.reply(embed=embed)
