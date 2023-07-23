@@ -1,4 +1,5 @@
 import requests
+import math
 
 def get_ultra_short_live_check_raw_data(serviceKey,Lookup_date, Lookup_time, nx, ny):
     """
@@ -19,7 +20,7 @@ def get_ultra_short_live_check_raw_data(serviceKey,Lookup_date, Lookup_time, nx,
         params = {
             'serviceKey': serviceKey,
             'pageNo': '1',
-            'numOfRows': '7',
+            'numOfRows': '8',
             'dataType': 'JSON',
             'base_date': Lookup_date,
             'base_time': str(Lookup_time.hour - 1) + "00",
@@ -158,15 +159,29 @@ def short_term_forecast(raw_data):
 
     return forecast_data_dict
 
-def get_weather_code(data, data_type):
-    pty_code = data
-    for item in data['response']['body']['items']['item']:
+def get_visual_data(raw_data, return_type):
+    """
+    데이터를 시각화 하는 함수
+    
+    Args:
+        raw_data (dic) : 초단기 실황 데이터를 포함한 딕셔너리.
+        return_type (int) : 1 또는 2 중 택
+
+    Retruns:
+        str : 시각화 데이터
+    """
+    pty_code = raw_data
+    wind = raw_data
+    for item in raw_data['response']['body']['items']['item']:
         if item['category'] == 'PTY':
             pty_code = item['obsrValue']
+        elif item['category'] == 'VEC':
+            wind = item['obsrValue']
+            wind = str(math.trunc((int(wind) + 22.5 * 0.5) / 22.5))
             break
 
-    emoji_mapping = {
-        '0': '☀️',   # 없음
+    weather_emoji = {
+        '0': '',   # 없음
         '1': '🌧️',   # 비
         '2': '🌨️',   # 비/눈
         '3': '❄️',   # 눈
@@ -175,16 +190,29 @@ def get_weather_code(data, data_type):
         '7': '🌨️',   # 눈날림 (눈으로 대체)
     }
 
-    text = {
-        '0':'맑음',
-        '1':'비',
-        '2':'비/눈',
-        '3':'눈',
-        '5':'빗방울',
-        '6':'빗방울눈날림',
-        '7':'눈날림'
+    wind_emoji = {
+        '0' : '↑ 북',
+        '1' : '↑↗ 북북동',
+        '2' : '↗ 북동',
+        '3' : '→↗  동북동',
+        '4' : '→  동',
+        '5' : '→↘  동남동',
+        '6' : '↘ 남동',
+        '7' : '↓↘ 남남동',
+        '8' : '↓ 남',
+        '9' : '↓↙ 남남서',
+        '10' : '↙ 남서',
+        '11' : '←↙  서남서',
+        '12' : '←  서',
+        '13' : '←↖ 서북서',
+        '14' : '↖ 서북',
+        '15' : '↑↖ 북북서',
+        '16' : '↑ 북'
     }
-    if data_type == 1:
-        return emoji_mapping.get(pty_code, '⚠️')
-    elif data_type == 2:
-        return text.get(pty_code, "?")
+
+    if return_type == 1:
+        return weather_emoji.get(pty_code, '⚠️')
+    elif return_type == 2:
+        return wind_emoji.get(wind, "E")
+    else:
+        return None
