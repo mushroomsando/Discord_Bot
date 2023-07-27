@@ -30,7 +30,7 @@ async def load_cogs():
     
     # Print the loaded cogs
     if loaded_cogs:
-        print(f"{now}{Fore.GREEN} INFO     {Fore.MAGENTA}Cogs load process{Style.RESET_ALL} Loaded Cogs: {', '.join(loaded_cogs)}")
+        print(f"{now}{Fore.BLUE} INFO     {Fore.MAGENTA}Cogs load process{Style.RESET_ALL} Loaded Cogs: {', '.join(loaded_cogs)}")
     else:
         print(f"{now}{Fore.YELLOW} INFO     {Fore.MAGENTA}Cogs load process{Style.RESET_ALL} No cogs loaded.")
 
@@ -40,13 +40,8 @@ async def on_ready():
     await load_cogs()
     print("=====================")
     color_code = '3b8eea'
-    print(f'\033[38;2;{int(color_code[:2], 16)};{int(color_code[2:4], 16)};{int(color_code[4:], 16)}m' +
-        f"{now}{Fore.CYAN} INFO     \033[38;2;{int(color_code[:2], 16)};{int(color_code[2:4], 16)};{int(color_code[4:], 16)}m" +
-        f"{Fore.MAGENTA}Login process{Style.RESET_ALL} LOGIN  : {bot.user.name}")
-
-    print(f'\033[38;2;{int(color_code[:2], 16)};{int(color_code[2:4], 16)};{int(color_code[4:], 16)}m' +
-        f"{now}{Fore.CYAN} INFO     \033[38;2;{int(color_code[:2], 16)};{int(color_code[2:4], 16)};{int(color_code[4:], 16)}m" +
-        f"{Fore.MAGENTA}Login process{Style.RESET_ALL} BOT ID : {bot.user.id}")
+    print(f"{now}{Fore.BLUE} INFO     {Fore.MAGENTA} Login process{Style.RESET_ALL} LOGIN : {bot.user.name}")
+    print(f"{now}{Fore.BLUE} INFO     {Fore.MAGENTA} Login process{Style.RESET_ALL} LOGIN : {bot.user.id}")
     print("=====================")
 
 # Bot run
