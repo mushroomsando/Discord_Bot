@@ -50,10 +50,6 @@ import Weather_data as Wd
 import Weather_data_process as Wp
 from datetime import datetime
 
-today = datetime.today()
-today_date = today.strftime("%Y%m%d")
-now = datetime.now()
-
 class Forecast(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -61,8 +57,12 @@ class Forecast(commands.Cog):
     @commands.command(name="날씨")
     async def now_weather(self, ctx):
         try:
+            today = datetime.today()
+            today_date = today.strftime("%Y%m%d")
+            now = datetime.now()
             weather_data = Wd.get_ultra_short_live_check_raw_data(open("Weather_Function\\api_code.txt", "r"), today_date, now, 102, 84)
             process_data = Wd.ultra_short_live_chek(weather_data)
+            
             wind = process_data['VEC']
             wind = str(math.trunc((int(wind) + 22.5 * 0.5) / 22.5))
 
@@ -93,13 +93,19 @@ class Forecast(commands.Cog):
     @commands.command(name = "일기예보") #TODO
     async def forecast_weather(self, ctx):
         try:
+            today = datetime.today()
+            today_date = today.strftime("%Y%m%d")
+            now = datetime.now()
+            
             weather_data = Wd.get_short_term_forecast_inquiry_raw_data(open("Weather_Function\\api_code.txt", "r"), today_date, now, 102, 84)
             loading_emoji = '⚙️'
             await ctx.message.add_reaction(loading_emoji)
             print("OK")
+            
             success_reaction = '✅'
             await ctx.message.add_reaction(success_reaction)
             await ctx.message.remove_reaction(loading_emoji, ctx.me)
+            
             await ctx.reply(f"Success! raw data is : \n{Wd.short_term_forecast(weather_data)} \n{now}")
             print("COMPELETE")
         except Exception as e:
