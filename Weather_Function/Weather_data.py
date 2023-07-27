@@ -1,5 +1,43 @@
 import requests
-import math
+
+#======== 계산 ========
+
+def calculate_base_datetime(lookup_date, lookup_time):
+    """
+    기준 시간과 날짜를 계산하는 함수
+
+    Args:
+        lookup_date (str): 조회할 기준 날짜 (YYYYMMDD 형식).
+        lookup_time (datetime.datetime): 조회할 기준 시간.
+
+    Returns:
+        tuple: 기준 시간과 날짜를 담은 튜플 (base_time, base_date)을 반환.
+    """
+    base_date = lookup_date
+    lookup_hour = lookup_time.hour
+
+    if lookup_hour < 2:
+        base_time = "2300"
+        # 전날 날짜로 설정
+        base_date = str(int(lookup_date) - 1)
+    elif lookup_hour < 5:
+        base_time = "0200"
+    elif lookup_hour < 8:
+        base_time = "0500"
+    elif lookup_hour < 11:
+        base_time = "0800"
+    elif lookup_hour < 14:
+        base_time = "1100"
+    elif lookup_hour < 17:
+        base_time = "1400"
+    elif lookup_hour < 20:
+        base_time = "1700"
+    else:
+        base_time = "2000"
+
+    return base_time, base_date
+
+#========데이터 조회========
 
 def get_ultra_short_live_check_raw_data(serviceKey,Lookup_date, Lookup_time, nx, ny):
     """
@@ -18,8 +56,10 @@ def get_ultra_short_live_check_raw_data(serviceKey,Lookup_date, Lookup_time, nx,
     try:
         if Lookup_time.minute < 30:
             Lookup_time = Lookup_time.hour - 1
+            print(Lookup_time)
         elif Lookup_time.minute >= 30:
             Lookup_time = Lookup_time.hour
+            print(Lookup_time)
 
         url = 'http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst'
         params = {
@@ -46,38 +86,22 @@ def get_ultra_short_live_check_raw_data(serviceKey,Lookup_date, Lookup_time, nx,
         print("Error occurred while decoding JSON data:", e)
         return None
 
-def get_short_term_forecast_inquiry_raw_data(serviceKey, Lookup_date, Lookup_time, nx, ny):
+def get_short_term_forecast_inquiry_raw_data(serviceKey, lookup_date, lookup_time, nx, ny):
     """
     기상청 API 에서 단기예보를 조회하는 함수
 
     Args:
         serviceKey (str): API 인증 키.
         lookup_date (str): 조회할 기준 날짜 (YYYYMMDD 형식).
-        lookup_time (int): 조회할 기준 시간 (0 ~ 23 사이의 정수).
+        lookup_time (datetime.datetime): 조회할 기준 시간.
         nx (int): X 좌표 값.
         ny (int): Y 좌표 값.
 
     Returns:
-        dict: 조회된 데이터를 딕셔너리 형태로 반환.
+        dict or str: 데이터 타입에 따라 조회된 데이터를 딕셔너리 형태로 반환.
     """
     try:
-        Lookup_time = Lookup_time.hour
-        if Lookup_time < 2:
-            base_time = "2300"
-        elif Lookup_time < 5:
-            base_time = "0200"
-        elif Lookup_time < 8:
-            base_time = "0500"
-        elif Lookup_time < 11:
-            base_time = "0800"
-        elif Lookup_time < 14:
-            base_time = "1100"
-        elif Lookup_time < 17:
-            base_time = "1400"
-        elif Lookup_time < 20:
-            base_time = "1700"
-        else:
-            base_time = "2000"
+        base_time, base_date = calculate_base_datetime(lookup_date, lookup_time)
 
         url = 'http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst'
         params = {
@@ -85,7 +109,7 @@ def get_short_term_forecast_inquiry_raw_data(serviceKey, Lookup_date, Lookup_tim
             'pageNo': '1',
             'numOfRows': '96',
             'dataType': 'JSON',
-            'base_date': Lookup_date,
+            'base_date': base_date,
             'base_time': base_time,
             'nx': nx,
             'ny': ny
@@ -95,14 +119,16 @@ def get_short_term_forecast_inquiry_raw_data(serviceKey, Lookup_date, Lookup_tim
         response.raise_for_status()
         data = response.json()
 
-        return data, base_time
+        return data
     
     except requests.exceptions.RequestException as e:  # 추가: 네트워크 연결 오류 처리
-        print("Error occurred during the API request:", e)
+        print("API 요청 중 오류가 발생했습니다:", e)
         return None
     except ValueError as e:  # 추가: JSON 디코딩 오류 처리
-        print("Error occurred while decoding JSON data:", e)
+        print("JSON 데이터 디코딩 오류가 발생했습니다:", e)
         return None
+
+# ========데이터 1차 가공========
 
 def ultra_short_live_chek(raw_data):
     """
