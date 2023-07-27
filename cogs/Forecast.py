@@ -40,15 +40,17 @@
 기상청 API에서 기상특보 정보 받아오기
     이건 연구중...
 '''
+import sys
+sys.path.append('C:/Users/windows/Desktop/repository/Programing/Discord_bot/Weather_Function')
+
 import discord
 from discord.ext import commands
-import sys
+
 import traceback
 import math
-sys.path.append('C:/Users/windows/Desktop/repository/Programing/Discord_bot/Weather_Function')
-import Weather_data as Wd
-import Weather_data_process as Wp
 from datetime import datetime
+import Weather_data as Wd
+import Weather_data_supplementary_information as Wi
 
 class Forecast(commands.Cog):
     def __init__(self, bot):
@@ -74,9 +76,9 @@ class Forecast(commands.Cog):
             await ctx.message.remove_reaction(loading_emoji, ctx.me)
             await ctx.message.add_reaction(success_reaction)
 
-            embed = discord.Embed(title = f"{Wp.get_visual_data(weather_data, 1)}NOW WEATHER\n-------------\n🚩울산광역시 중구 태화동\n\t\t\t\t\t\t\t🌡️ {process_data['T1H']}℃\n\t\t\t\t\t\t👤체감{Wp.discomfort_index(float(process_data['T1H']), int(process_data['REH']), float(process_data['WSD'])):.1f}℃",color=0x00aaff)
+            embed = discord.Embed(title = f"{Wi.get_visual_data(weather_data, 1)}NOW WEATHER\n-------------\n🚩울산광역시 중구 태화동\n\t\t\t\t\t\t\t🌡️ {process_data['T1H']}℃\n\t\t\t\t\t\t👤체감{Wi.discomfort_index(float(process_data['T1H']), int(process_data['REH']), float(process_data['WSD'])):.1f}℃",description="상세정보",color=0x00aaff)
             embed.add_field(name = "💧습도", value=process_data['REH'] + "%", inline=True)
-            embed.add_field(name = "💨바람", value=Wp.get_visual_data(weather_data, 2)+ process_data['WSD']+ "m/s", inline=True) #기상청 홈피랑 달라요 왜지?
+            embed.add_field(name = "💨바람", value=f"{Wi.get_visual_data(weather_data, 2)} {process_data['WSD']}m/s", inline=True) #기상청 홈피랑 달라요 왜지?
             embed.add_field(name = "☔1시간 강수량", value=process_data['RN1'] + "mm", inline=True)
             embed.set_footer(text=f"최종 업데이트: {now.month}.{now.day} {now.hour}:{now.minute}\t\t\tProvision 대한민국 기상청")
             await ctx.reply(embed=embed)
@@ -91,13 +93,19 @@ class Forecast(commands.Cog):
             await ctx.send(error_msg)
     
     @commands.command(name = "일기예보") #TODO
-    async def forecast_weather(self, ctx):
+    async def forecast_weather(self, ctx, debug_able=0):
         try:
             today = datetime.today()
             today_date = today.strftime("%Y%m%d")
             now = datetime.now()
-            
             weather_data = Wd.get_short_term_forecast_inquiry_raw_data(open("Weather_Function\\api_code.txt", "r"), today_date, now, 102, 84)
+
+            if debug_able == 0:
+                pass
+            elif debug_able == 1:
+                print(weather_data)
+                print(Wd.calculate_base_datetime(today_date, now))
+            
             loading_emoji = '⚙️'
             await ctx.message.add_reaction(loading_emoji)
             print("OK")
