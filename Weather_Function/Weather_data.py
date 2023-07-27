@@ -16,6 +16,11 @@ def get_ultra_short_live_check_raw_data(serviceKey,Lookup_date, Lookup_time, nx,
         dict: 조회된 데이터를 딕셔너리 형태로 반환.
     """
     try:
+        if Lookup_time.minute < 30:
+            Lookup_time = Lookup_time.hour - 1
+        elif Lookup_time.minute >= 30:
+            Lookup_time = Lookup_time.hour
+
         url = 'http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst'
         params = {
             'serviceKey': serviceKey,
@@ -23,7 +28,7 @@ def get_ultra_short_live_check_raw_data(serviceKey,Lookup_date, Lookup_time, nx,
             'numOfRows': '8',
             'dataType': 'JSON',
             'base_date': Lookup_date,
-            'base_time': str(Lookup_time.hour) + "00",
+            'base_time': str(Lookup_time) + "00",
             'nx': nx,
             'ny': ny
         }
