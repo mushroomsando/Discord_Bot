@@ -1,7 +1,8 @@
 import math
 from datetime import datetime
+import Weather_data as Wd
 
-def get_visual_data(raw_data, return_type):
+def get_visual_data(raw_data, return_type, data_type = 0):
     """
     데이터를 시각화 하는 함수
     
@@ -14,13 +15,16 @@ def get_visual_data(raw_data, return_type):
     """
     pty_code = raw_data
     wind = raw_data
-    for item in raw_data['response']['body']['items']['item']:
-        if item['category'] == 'PTY':
-            pty_code = item['obsrValue']
-        elif item['category'] == 'VEC':
-            wind = item['obsrValue']
-            wind = str(math.trunc((int(wind) + 22.5 * 0.5) / 22.5))
-            break
+    if data_type == 0:
+        for item in raw_data['response']['body']['items']['item']:
+            if item['category'] == 'PTY':
+                pty_code = item['obsrValue']
+            elif item['category'] == 'VEC':
+                wind = item['obsrValue']
+                wind = str(math.trunc((int(wind) + 22.5 * 0.5) / 22.5))
+                break
+    else:
+        wind = str(math.trunc((int(wind) + 22.5 * 0.5) / 22.5))
 
     weather_emoji = {
         '0': '🔍',   # 없음
@@ -59,6 +63,23 @@ def get_visual_data(raw_data, return_type):
     else:
         return None
 
+def get_sky_emoji(sky_code, pty_code):
+    if sky_code == '1':
+        return '☀️ 맑음'
+    elif sky_code == '3':
+        return '⛅ 구름많음'
+    elif sky_code == '4':
+        return '☁️ 흐림'
+    elif pty_code == '1':
+        return '☔ 비'
+    elif pty_code == '2':
+        return '❄️/☔ 눈/비'
+    elif pty_code == '3':
+        return '❄️ 눈'
+    elif pty_code == '4':
+        return '🌦️ 소나기'
+    
+
 def discomfort_index(Ta, RH, V):
     """
     체감온도를 구하는 함수
@@ -83,4 +104,4 @@ def discomfort_index(Ta, RH, V):
             discomfort_index = 13.12 + 0.6215 * Ta - 11.37 * math.pow(V, 0.16) + 0.3965 * math.pow(V, 0.16) * Ta
             return discomfort_index # 겨울철 체감온도
         else:
-            return None # 겨울철 체감온도는 기온 10도 이하 풍속 1.3m/s 이상일 때만 산출
+            return "겨울철 체감온도는 기온 10도 이하 풍속 1.3m/s 이상일 때만 산출합니다." # 겨울철 체감온도는 기온 10도 이하 풍속 1.3m/s 이상일 때만 산출
