@@ -1,4 +1,6 @@
 import requests
+from datetime import datetime, timedelta
+import Weather_data_supplementary_information as Wi
 
 #======== 계산 ========
 
@@ -98,7 +100,7 @@ def get_short_term_forecast_inquiry_raw_data(serviceKey, lookup_date, lookup_tim
         ny (int): Y 좌표 값.
 
     Returns:
-        dict or str: 데이터 타입에 따라 조회된 데이터를 딕셔너리 형태로 반환.
+        dict : 조회된 데이터를 딕셔너리 형태로 반환.
     """
     try:
         base_time, base_date = calculate_base_datetime(lookup_date, lookup_time)
@@ -149,43 +151,61 @@ def ultra_short_live_chek(raw_data):
     
     return obsr_values_dict
 
-def short_term_forecast(raw_data):
-    """
-    단기예보 데이터를 가공하는 함수
+def short_term_forecast(raw_data): # TODO 최적화
+    # 현재 시간 설정
+    now = datetime.now()
+    today = now.date()
+    today_date = today.strftime("%Y%m%d")
+    hour = now.hour
 
-    Args:
-        raw_data (dict): 단기 예보 데이터를 포함한 딕셔너리.
+    # 현재로부터 6시간 후의 시간 계산s
+    forecast_time = now + timedelta(hours=6)
+    forecast_date = forecast_time.date()
+    forecast_hour = forecast_time.hour
 
-    Returns:
-        dict: 카테고리별로 단기예보 데이터를 저장한 딕셔너리.
-            딕셔너리의 형태는 다음과 같습니다:
-            {
-                '카테고리1': {
-                    'fcstValue': '예보값',
-                    'fcstDate': '예보날짜',
-                    'fcstTime': '예보시간'
-                },
-                '카테고리2': {
-                    'fcstValue': '예보값',
-                    'fcstDate': '예보날짜',
-                    'fcstTime': '예보시간'
-                },
-                ...
-            }
-    """
-    # 'item'에 해당하는 데이터들을 카테고리별로 저장하는 딕셔너리 생성
-    forecast_data_dict = {}
+    items = raw_data['response']['body']['items']['item']
+    data = {}  # 예보 데이터 저장용 딕셔너리
 
-    # 'item' 리스트 순회하며 카테고리별로 데이터 추가
-    for item in raw_data['response']['body']['items']['item']:
-        category = item['category']
-        fcst_value = item['fcstValue']
+    for item in items:
         fcst_date = item['fcstDate']
-        fcst_time = item['fcstTime']
-        forecast_data_dict[category] = {
-            'fcstValue': fcst_value,
-            'fcstDate': fcst_date,
-            'fcstTime': fcst_time
-        }
+        fcst_time = item['fcstTime'][:2]
+        category = item['category']
+        value = item['fcstValue']
+        
+        # 현재 시간부터 6시간 후까지의 데이터만 저장
+        if forecast_date > today or (today_date == fcst_date and hour <= int(fcst_time) <= forecast_hour):
+            if fcst_time not in data:
+                data[fcst_time] = {'date' : fcst_date}
+            data[fcst_time][category] = value
 
-    return forecast_data_dict
+    result = []
+
+    for time,data in data.items():
+        date = data['date'] # 날짜
+        temperature = data['TMP'] # 온도
+        humidity = data['REH'] # 습도
+        wind_dir = data['VEC'] # 풍향
+        wind_speed = data['WSD'] # 풍속
+        precipitation_probability = data['POP'] # 강수확률
+        precipitation_code = data['PTY'] # 강수코드 // 0:없음, 1:비, 2:비/눈, 3:눈, 4:소나기
+        one_hour_precipitation = data['PCP'] # 1시간 강수량
+        sky_code = data['SKY'] # 하늘코드 // 1:맑음, 3:구름많음, 4:흐림
+        sky_emoji = Wi.get_sky_emoji(sky_code, precipitation_code)
+        wind_dir_emji = Wi.get_visual_data(wind_dir,2,1)
+
+        result.append({
+            'time': time,
+            'date': date,
+            'temperature': temperature,
+            'humidity': humidity,
+            'wind_dir' : wind_dir,
+            'wind_speed' : wind_speed,
+            'precipitation_probability' : precipitation_probability,
+            'precipitation_code' : precipitation_code,
+            'one_hour_precipitation' : one_hour_precipitation,
+            'sky_code' : sky_code,
+            'sky_emoji' : sky_emoji,
+            'wind_dir_emji' : wind_dir_emji
+        })
+
+    return result
