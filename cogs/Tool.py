@@ -20,6 +20,13 @@ class Tool(commands.Cog):
         embed = discord.Embed(title="🏓 퐁!", description=f"{latency}ms", color=0x00aaff)
         embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
         await ctx.reply(embed=embed)
+
+    @commands.command(name="봇 정보")
+    async def info(self, ctx):
+        embed = discord.Embed(title="🛠️ INFO", description="HELLO WORLD!",color = 0x00aff)
+        embed.add_field(name = "version", value = "23v0731b")
+        embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+        await ctx.reply(embed=embed)
     
     @commands.command(name="계산기")
     async def calculate(self, ctx, *, expression):
