@@ -31,16 +31,73 @@
 
     기본값 = 울산광역시 중구 태화동
 """
+import sys
+sys.path.append('C:/Users/windows/Desktop/repository/Programing/Discord_bot/Weather_Function')
+
 from discord.ext import commands
-import discord
+import asyncio
+import pandas as pd
+from Location_data_util import *
+
+# 엑셀 파일 경로를 지정
+excel_file_path = 'DB\\기상청_격자위치.xlsx'
+
+# 엑셀 파일을 읽어서 DataFrame으로 저장.
+df = pd.read_excel(excel_file_path)
 
 class Region(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
-    @commands.command(name="TEST")
-    async def help(self, ctx):
-        await ctx.send("HI")
-        
+
+    @commands.command(name="지역검색")
+    async def search_data(self, ctx, *args):
+        # 입력값 확인 및 변수 초기화
+        province, county, town = None, None, None
+        if len(args) < 1:
+            await ctx.reply("최소 한개 이상의 정보를 입력해 주세요.")
+            return
+
+        # 검색어 추출
+        for term in args:
+            if term in df['1단계'].unique():
+                province = term
+            elif term in df['2단계'].unique():
+                county = term
+            elif term in df['3단계'].unique():
+                town = term
+
+        # 조건에 맞는 데이터 검색
+        filtered_data = filter_data(df, province, county, town)
+
+        # 검색 결과가 35개 이상인지 확인
+        while len(filtered_data) >= 35:
+            # 검색 결과가 35개 이상이면 추가 정보를 입력받음
+            await ctx.send(f"검색 결과가 35개 이상입니다. 추가 정보를 입력해주세요.")
+
+            # 추가 정보를 입력받아 검색을 다시 수행
+            def check(message):
+                return message.author == ctx.author and message.channel == ctx.channel
+
+            try:
+                msg = await self.bot.wait_for('message', check=check, timeout=30.0)
+                extra_data = msg.content
+
+                # 입력된 추가 정보에 따라 검색을 다시 수행
+                if province is None and extra_data in df['1단계'].unique():
+                    province = extra_data
+                elif county is None and extra_data in df['2단계'].unique():
+                    county = extra_data
+                elif town is None and extra_data in df['3단계'].unique():
+                    town = extra_data
+
+                filtered_data = filter_data(df, province, county, town)
+            except asyncio.TimeoutError:
+                await ctx.send("시간 초과로 처리되었습니다. 검색을 종료합니다.")
+                return
+
+        # 검색 결과를 디스코드 채팅으로 전송
+        response = format_search_result(filtered_data)
+        await ctx.send(response)
+
 async def setup(bot):
     await bot.add_cog(Region(bot))
