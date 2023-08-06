@@ -2,10 +2,6 @@
 지역 선택 가능하게 만들기
     서버가 어던 값을 설정했는지 Excel로 저장해서 다음부터 이 서버에서 저장한 값으로 일기예보 출력
     로직
-        기상청에서 제공한 Excel 파일에서 정보를 가져옴
-        유저는 다음과 같은 파라메터를 봇에게 전달해서 봇이 처리
-            !지역설정 [시/도][군/구][읍/면/동]
-            셋중에 최소 한개 이상 아무 값이나 입력받음
         봇은 Excel 파일에서 다음과 같이 처리
             Excel 파일 구조
                 [시/도]는 Excel Cn -> [군/구] Dn -> [읍/면/동] En 순서
@@ -25,9 +21,6 @@
                         저장구조) A열 -> 서버ID, B열 -> [시/도], C열 -> [군/구], D열 -> [읍/면/동], E열 -> Nx값, F열 ->Ny값
             
             설정 결과를 Embed로 출력
-            
-        
-            
 
     기본값 = 울산광역시 중구 태화동
 """
@@ -35,7 +28,7 @@ import sys
 sys.path.append('C:/Users/windows/Desktop/repository/Programing/Discord_bot/Weather_Function')
 
 from discord.ext import commands
-import asyncio
+import discord
 import pandas as pd
 from Location_data_util import *
 
@@ -69,35 +62,54 @@ class Region(commands.Cog):
         # 조건에 맞는 데이터 검색
         filtered_data = filter_data(df, province, county, town)
 
-        # 검색 결과가 35개 이상인지 확인
-        while len(filtered_data) >= 35:
-            # 검색 결과가 35개 이상이면 추가 정보를 입력받음
-            await ctx.send(f"검색 결과가 35개 이상입니다. 추가 정보를 입력해주세요.")
+        #한 페이지에 보여줄 정보 갯수 설정
+        chunk_size = 10
 
-            # 추가 정보를 입력받아 검색을 다시 수행
-            def check(message):
-                return message.author == ctx.author and message.channel == ctx.channel
+        #페이지 나누기
+        pages = [filtered_data[i:i + chunk_size] for i in range(0, len(filtered_data), chunk_size)]
+        page_number = 0
+        total_pages = len(pages)
 
+        def create_embed(page_number):
+                embed = discord.Embed(title="🔍 Search Results", description=f"검색결과 {len(filtered_data)}개", color=0x00aaff)
+                number = 1
+                for item in pages[page_number]:
+                    embed.add_field(name = f"No. {number}", value = f"{item['1단계']} {item['2단계']} {item['3단계']}", inline=False)
+                    number += 1
+                embed.set_footer(text=f"페이지 {page_number + 1}/{total_pages}")
+                return embed
+        
+        # 초기 페이지
+        paginated_embed = create_embed(page_number)
+        paginated_message = await ctx.send(embed=paginated_embed)
+
+        left_arrow = '⬅️'
+        right_arrow = '➡️'
+        # 이동용 이모지를 추가
+        if total_pages > 1:
+            await paginated_message.add_reaction(left_arrow)
+            await paginated_message.add_reaction(right_arrow)
+
+        print("OK")
+
+        while True:
             try:
-                msg = await self.bot.wait_for('message', check=check, timeout=30.0)
-                extra_data = msg.content
+                reaction, user = await self.bot.wait_for('reaction_add', timeout=60.0, check=lambda r, u: u == ctx.author and r.message.id == paginated_message.id)
 
-                # 입력된 추가 정보에 따라 검색을 다시 수행
-                if province is None and extra_data in df['1단계'].unique():
-                    province = extra_data
-                elif county is None and extra_data in df['2단계'].unique():
-                    county = extra_data
-                elif town is None and extra_data in df['3단계'].unique():
-                    town = extra_data
+                if str(reaction.emoji) == left_arrow and page_number > 0:
+                    page_number -= 1
+                    paginated_embed = create_embed(page_number)
+                    await paginated_message.edit(embed=paginated_embed)
+                    await paginated_message.remove_reaction(reaction, user)
 
-                filtered_data = filter_data(df, province, county, town)
-            except asyncio.TimeoutError:
-                await ctx.send("시간 초과로 처리되었습니다. 검색을 종료합니다.")
-                return
+                elif str(reaction.emoji) == right_arrow and page_number < total_pages - 1:
+                    page_number += 1
+                    paginated_embed = create_embed(page_number)
+                    await paginated_message.edit(embed=paginated_embed)
+                    await paginated_message.remove_reaction(reaction, user)
 
-        # 검색 결과를 디스코드 채팅으로 전송
-        response = format_search_result(filtered_data)
-        await ctx.send(response)
+            except TimeoutError:
+                break
 
 async def setup(bot):
     await bot.add_cog(Region(bot))

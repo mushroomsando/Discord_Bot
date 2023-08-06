@@ -14,16 +14,3 @@ def filter_data(df, province=None, county=None, town=None):
 
     # 검색 결과 딕셔너리 반환
     return filtered_data.to_dict(orient='records')
-
-def format_search_result(result):
-    # 검색 결과 딕셔너리를 문자열로 변환하여 반환
-    if not result:
-        return "검색 결과가 없습니다."
-
-    formatted_result = []
-    for data in result:
-        formatted_data = f"시/도: {data['1단계']}, 군/구: {data['2단계']}, 읍/면/동: {data['3단계']}, " \
-                         f"격자 X: {data['격자 X']}, 격자 Y: {data['격자 Y']}"
-        formatted_result.append(formatted_data)
-
-    return "\n".join(formatted_result)
