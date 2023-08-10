@@ -69,16 +69,17 @@ def get_sky_emoji(sky_code, pty_code):
     elif sky_code == '3':
         return '⛅ 구름많음'
     elif sky_code == '4':
-        return '☁️ 흐림'
-    elif pty_code == '1':
-        return '☔ 비'
-    elif pty_code == '2':
-        return '❄️/☔ 눈/비'
-    elif pty_code == '3':
-        return '❄️ 눈'
-    elif pty_code == '4':
-        return '🌦️ 소나기'
-    
+        if pty_code == '1':
+            return '☔ 비'
+        elif pty_code == '2':
+            return '❄️/☔ 눈/비'
+        elif pty_code == '3':
+            return '❄️ 눈'
+        elif pty_code == '4':
+            return '🌦️ 소나기'
+        else:
+            return '☁️ 흐림'
+        
 
 def discomfort_index(Ta, RH, V):
     """

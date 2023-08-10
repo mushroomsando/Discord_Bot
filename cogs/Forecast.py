@@ -24,13 +24,9 @@ class Forecast(commands.Cog):
             now = datetime.now()
             weather_data = Wd.get_ultra_short_live_check_raw_data(open("Weather_Function\\api_code.txt", "r"), today_date, now, 102, 84)
             process_data = Wd.ultra_short_live_chek(weather_data)
-            
-            wind = process_data['VEC']
-            wind = str(math.trunc((int(wind) + 22.5 * 0.5) / 22.5))
 
             loading_emoji = '⚙️'
             await ctx.message.add_reaction(loading_emoji)
-            print(wind)
 
             success_reaction = '✅'
             await ctx.message.remove_reaction(loading_emoji, ctx.me)
@@ -70,15 +66,16 @@ class Forecast(commands.Cog):
 
             # 페이지별 embed를 생성하는 함수를 정의
             def create_embed(page_number):
-                embed = discord.Embed(title="WEATHER FORECAST\n-------------\n🚩울산광역시 중구 태화동", description="지금으로부터 6시간 후 동안의 일기예보를 불러옵니다.", color=0x00aaff)
+                embed = discord.Embed(title="📺 WEATHER FORECAST\n\n🚩울산광역시 중구 태화동", 
+                                      description="6시간 동안의 일기예보 입니다.", color=0x00aaff)
                 for item in pages[page_number]:
                     embed.add_field(
                         name=f"{item['sky_emoji']} {item['date'][:4]}년 {item['date'][4:6]}월 {item['date'][6:]}일 {item['time']}:00",
                         value=f"🌡 기온: {item['temperature']}°C\n"
                               f"💧 습도: {item['humidity']}%\n"
-                              f"🌬 풍향: {item['wind_dir_emji']} ({item['wind_dir']}°)\n"
-                              f"💨 풍속: {item['wind_speed']} m/s\n"
-                              f"🌧 강수 확률: {item['precipitation_probability']}%\n")
+                              f"🌬 바람: {item['wind_dir_emoji']} {item['wind_speed']}m/s\n"
+                              f"🌧 강수 확률: {item['precipitation_probability']}%\n"
+                              f"☔️ 강우량: {item['one_hour_precipitation']}")
 
                 embed.set_footer(text=f"페이지 {page_number + 1}/{total_pages}\t\t\t\t최종 업데이트: {now.month}.{now.day} {now.hour}:{now.minute}\t\t\t\tProvision 대한민국 기상청")
                 return embed
@@ -90,6 +87,10 @@ class Forecast(commands.Cog):
             paginated_embed = create_embed(page_number)
             paginated_message = await ctx.send(embed=paginated_embed)
 
+            success_reaction = '✅'
+            await ctx.message.remove_reaction(loading_emoji, ctx.me)
+            await ctx.message.add_reaction(success_reaction)
+
             left_arrow = '⬅️'
             right_arrow = '➡️'
             # 이동용 이모지를 추가
@@ -98,10 +99,6 @@ class Forecast(commands.Cog):
                 await paginated_message.add_reaction(right_arrow)
 
             print("OK")
-
-            success_reaction = '✅'
-            await ctx.message.remove_reaction(loading_emoji, ctx.me)
-            await ctx.message.add_reaction(success_reaction)
 
             while True:
                 try:
