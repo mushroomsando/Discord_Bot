@@ -36,7 +36,7 @@ class Forecast(commands.Cog):
             embed.add_field(name = "💧습도", value=process_data['REH'] + "%", inline=True)
             embed.add_field(name = "💨바람", value=f"{Wi.get_visual_data(weather_data, 2)} {process_data['WSD']}m/s", inline=True) #기상청 홈피랑 달라요 왜지?
             embed.add_field(name = "☔1시간 강수량", value=process_data['RN1'] + "mm", inline=True)
-            embed.set_footer(text=f"최종 업데이트: {now.month}.{now.day} {now.hour}:{now.minute}\t\t\tProvision 대한민국 기상청")
+            embed.set_footer(text=f"최종 업데이트: {now.month}.{now.day} {now.hour}:{now.minute}\t\t\tPower by 기상청")
             await ctx.reply(embed=embed)
 
         except Exception as e:
@@ -77,7 +77,7 @@ class Forecast(commands.Cog):
                               f"🌧 강수 확률: {item['precipitation_probability']}%\n"
                               f"☔️ 강우량: {item['one_hour_precipitation']}")
 
-                embed.set_footer(text=f"페이지 {page_number + 1}/{total_pages}\t\t\t\t최종 업데이트: {now.month}.{now.day} {now.hour}:{now.minute}\t\t\t\tProvision 대한민국 기상청")
+                embed.set_footer(text=f"페이지 {page_number + 1}/{total_pages}\t\t\t\t최종 업데이트: {now.month}.{now.day} {now.hour}:{now.minute}\t\t\t\tPower by 기상청")
                 return embed
 
             loading_emoji = '⚙️'
