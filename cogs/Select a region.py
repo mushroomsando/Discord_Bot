@@ -2,21 +2,6 @@
 지역 선택 가능하게 만들기
     서버가 어던 값을 설정했는지 Excel로 저장해서 다음부터 이 서버에서 저장한 값으로 일기예보 출력
     로직
-        봇은 Excel 파일에서 다음과 같이 처리
-            Excel 파일 구조
-                [시/도]는 Excel Cn -> [군/구] Dn -> [읍/면/동] En 순서
-
-            Excel 파일에서 유저가 입력한 값을 필터링 해서 한 페이지에 5개씩 검색결과 embed로 출력
-                예외처리) 만약 검색 결과가 없다면 "검색결과가 없습니다" 라고 출력
-                출력방법
-                    봇이 보낸 메시지에 ⏩(다음)⏪(이전) 이모지 추가
-                        조건)가장 첫페이지라면 이전 이모지를 추가하지 않음
-                        조건)가장 마지막 페이지라면 다음 이모지를 추가하지 않음
-                    이벤트 처리
-                        유저가 다음 이모지를 누르면 검색결과 페이지를 다음으로 넘김
-                        이전 메시지를 누르면 검색결과 페이지를 이전으로 넘김
-                검색결과 선택
-                    유저는 !선택 [번호]로 선택할 수 있게 함
                     봇은 선택받은 값을 기상청에서 제공한 Excel 파일에서 F열값, G값을 Excel 파일로 저장
                         저장구조) A열 -> 서버ID, B열 -> [시/도], C열 -> [군/구], D열 -> [읍/면/동], E열 -> Nx값, F열 ->Ny값
             
@@ -42,13 +27,15 @@ class Region(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="지역검색")
+    @commands.command(name="지역검색") # 미친 개 거지 발상이 같이 짜놔서 코드가 정말 더럽네요
     async def search_data(self, ctx, *args):
         # 입력값 확인 및 변수 초기화
         province, county, town = None, None, None
         if len(args) < 1:
-            await ctx.reply("최소 한개 이상의 정보를 입력해 주세요.")
-            return
+            embed = discord.Embed(title="⚠️ ERROR", description="사용법이 잘못되었습니다.", color=0xff0000)
+            embed.add_field(name="올바른 사용법", value="!지역검색 [시/도] [군/구] [읍/면/동] (중 최소 한개 이상의 정보)", inline=False)
+            embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+            await ctx.reply(embed=embed)
 
         # 검색어 추출
         for term in args:
@@ -71,45 +58,104 @@ class Region(commands.Cog):
         total_pages = len(pages)
 
         def create_embed(page_number):
-                embed = discord.Embed(title="🔍 Search Results", description=f"검색결과 {len(filtered_data)}개", color=0x00aaff)
-                number = 1
+                if len(filtered_data) > 30:
+                    message = f"검색결과 {len(filtered_data)}개 \n💡검색결과가 많아 보입니다. 좀 더 많은 정보를 입력해 보세요."
+                else:
+                    message = f"검색결과 {len(filtered_data)}개"
+                
+                current_page_data = pages[page_number]
+                embed = discord.Embed(title="🔍 Search Results", description=message, color=0x00aaff)
+                number = page_number * chunk_size + 1
                 for item in pages[page_number]:
                     embed.add_field(name = f"No. {number}", value = f"{item['1단계']} {item['2단계']} {item['3단계']}", inline=False)
                     number += 1
-                embed.set_footer(text=f"페이지 {page_number + 1}/{total_pages}")
+                embed.set_footer(text=f"Copyright (C) 2023 By Mushroomsando. All right reserved\t\t\t페이지 {page_number + 1}/{total_pages}")
                 return embed
         
-        # 초기 페이지
-        paginated_embed = create_embed(page_number)
-        paginated_message = await ctx.send(embed=paginated_embed)
+        if len(filtered_data) == 1:  # 검색 결과가 한 개인 경우
+            selected_item = filtered_data[0]
+            selected_embed = discord.Embed(title="✅ COMPLETE", description="💡검색결과가 1개여서 자동으로 선택됬어요." ,color=0x00aaff)
+            selected_embed.add_field(name="앞으로 이 지역의 현재날씨와 일기예보를 조회할께요.", 
+                                     value=f"{selected_item['1단계']} {selected_item['2단계']} {selected_item['3단계']}", inline=False)
+            selected_embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+            await ctx.send(embed=selected_embed)
+            print(selected_item['격자 X'], selected_item['격자 Y'])
+            print("OK")
+            #TODO 설정결과 파일 저장
 
-        left_arrow = '⬅️'
-        right_arrow = '➡️'
-        # 이동용 이모지를 추가
-        if total_pages > 1:
-            await paginated_message.add_reaction(left_arrow)
-            await paginated_message.add_reaction(right_arrow)
+        else:
+            # 초기 페이지
+            paginated_embed = create_embed(page_number)
+            paginated_message = await ctx.send(embed=paginated_embed)
 
-        print("OK")
+            left_arrow = '⬅️'
+            right_arrow = '➡️'
+            search = '🔍'
+            cancle = '✖️'
+            # 이동용 이모지를 추가
+            if total_pages > 1:
+                await paginated_message.add_reaction(left_arrow)
+                await paginated_message.add_reaction(right_arrow)
+                await paginated_message.add_reaction(search)
+                await paginated_message.add_reaction(cancle)
+            print("OK")
 
-        while True:
-            try:
-                reaction, user = await self.bot.wait_for('reaction_add', timeout=60.0, check=lambda r, u: u == ctx.author and r.message.id == paginated_message.id)
+            while True:
+                try:
+                    reaction, user = await self.bot.wait_for('reaction_add', timeout=60.0, check=lambda r, u: u == ctx.author and r.message.id == paginated_message.id)
 
-                if str(reaction.emoji) == left_arrow and page_number > 0:
-                    page_number -= 1
-                    paginated_embed = create_embed(page_number)
-                    await paginated_message.edit(embed=paginated_embed)
-                    await paginated_message.remove_reaction(reaction, user)
+                    if str(reaction.emoji) == left_arrow and page_number > 0:
+                        page_number -= 1
+                        paginated_embed = create_embed(page_number)
+                        await paginated_message.edit(embed=paginated_embed)
+                        await paginated_message.remove_reaction(reaction, user)
 
-                elif str(reaction.emoji) == right_arrow and page_number < total_pages - 1:
-                    page_number += 1
-                    paginated_embed = create_embed(page_number)
-                    await paginated_message.edit(embed=paginated_embed)
-                    await paginated_message.remove_reaction(reaction, user)
+                    elif str(reaction.emoji) == right_arrow and page_number < total_pages - 1:
+                        page_number += 1
+                        paginated_embed = create_embed(page_number)
+                        await paginated_message.edit(embed=paginated_embed)
+                        await paginated_message.remove_reaction(reaction, user)
+                    
+                    elif str(reaction.emoji) == cancle:
+                        embed = discord.Embed(title="✅ INFO", color=0x00aaff)
+                        embed.add_field(name="취소됨", value="작업이 취소되었습니다.", inline=False)
+                        embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+                        await ctx.reply(embed=embed)
+                    
+                    elif str(reaction.emoji) == '🔍':
+                        await ctx.send("원하는 번호를 입력하세요: (예: !선택 3)")
 
-            except TimeoutError:
-                break
+                        def check(msg):
+                            return msg.author == ctx.author and msg.channel == ctx.channel and msg.content.startswith('!선택')
+
+                        try:
+                            selection_message = await self.bot.wait_for('message', timeout=30.0, check=check)
+                            selected_number = int(selection_message.content.split()[1])  # 입력한 번호 추출
+
+                            if 1 <= selected_number <= len(filtered_data):
+                                selected_item = filtered_data[selected_number - 1]
+                                selected_embed = discord.Embed(title="✅ COMPLETE", color=0x00aaff)
+                                selected_embed.add_field(name="앞으로 이 지역의 현재날씨와 일기예보를 조회할께요.", 
+                                                         value=f"{selected_item['1단계']} {selected_item['2단계']} {selected_item['3단계']}", inline=False)
+                                selected_embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+                                await ctx.send(embed=selected_embed)
+                                print(selected_item['격자 X'], selected_item['격자 Y'])
+                                #TODO 설정결과 파일 저장
+                            else:
+                                embed = discord.Embed(title="⚠️ ERROR", color=0xff0000)
+                                embed.add_field(name="유효하지 않은 번호", value="유효하지 않은 정보입니다. 다시 시도해 주세요.", inline=False)
+                                embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+                                await ctx.reply(embed=embed)
+                                    
+                        except TimeoutError:
+                            embed = discord.Embed(title="⏰ INFO", color=0xfffb00)
+                            embed.add_field(name="시간초과", value="선택이 취소되었습니다.", inline=False)
+                            embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+                            await ctx.reply(embed=embed)
+                        break
+
+                except TimeoutError:
+                    break
 
 async def setup(bot):
     await bot.add_cog(Region(bot))
