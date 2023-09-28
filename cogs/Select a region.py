@@ -17,17 +17,15 @@ class Region(commands.Cog):
 
     @commands.command(name="지역검색") # 미친 개 거지 발상이 같이 짜놔서 코드가 정말 더럽네요
     async def search_data(self, ctx, *args):
-        loading_emoji = '⚙️'
-        await ctx.message.add_reaction(loading_emoji)
-        
         # 입력값 확인 및 변수 초기화
         province, county, town = None, None, None
         if len(args) < 1:
-            embed = discord.Embed(title="⚠️ ERROR", description="사용법이 잘못되었습니다.", color=0xff0000)
-            embed.add_field(name="올바른 사용법", value="!지역검색 [시/도] [군/구] [읍/면/동] (중 최소 한개 이상의 정보)", inline=False)
-            embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
-            await ctx.reply(embed=embed)
-
+            await ctx.message.add_reaction("⚠️")
+            raise commands.BadArgument
+    
+        loading_emoji = '⚙️'
+        await ctx.message.add_reaction(loading_emoji)
+        
         # 검색어 추출
         for term in args:
             if term in df['1단계'].unique():
@@ -169,7 +167,6 @@ class Region(commands.Cog):
                                 embed.add_field(name="유효하지 않은 번호", value="유효하지 않은 정보입니다. 다시 시도해 주세요.", inline=False)
                                 embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
                                 await ctx.reply(embed=embed)
-                                    
                         except TimeoutError:
                             embed = discord.Embed(title="⏰ INFO", color=0xfffb00)
                             embed.add_field(name="시간초과", value="선택이 취소되었습니다.", inline=False)
@@ -179,6 +176,19 @@ class Region(commands.Cog):
 
                 except TimeoutError:
                     break
-
+    
+    @search_data.error #예외처리
+    async def kickerror(self, ctx, error):
+        if isinstance(error, commands.CommandInvokeError):
+            embed = discord.Embed(title="⚙️ ERROR", description="잘못된 값을 전달받았습니다. 다시 시도해 주세요.", color=0xff0000)
+            embed.add_field(name="올바른 사용법", value="!선택 [번호 (정수)]", inline=False)
+            embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+            await ctx.reply(embed=embed)
+        elif isinstance(error, commands.BadArgument):
+            embed = discord.Embed(title="⚠️ ERROR", description="사용법이 잘못되었습니다.", color=0xff0000)
+            embed.add_field(name="올바른 사용법", value="!지역검색 [시/도] [군/구] [읍/면/동] (중 최소 한개 이상의 정보)", inline=False)
+            embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+            await ctx.reply(embed=embed)
+            
 async def setup(bot):
     await bot.add_cog(Region(bot))
