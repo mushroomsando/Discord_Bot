@@ -1,14 +1,3 @@
-""""
-지역 선택 가능하게 만들기
-    서버가 어던 값을 설정했는지 Excel로 저장해서 다음부터 이 서버에서 저장한 값으로 일기예보 출력
-    로직
-                    봇은 선택받은 값을 기상청에서 제공한 Excel 파일에서 F열값, G값을 Excel 파일로 저장
-                        저장구조) A열 -> 서버ID, B열 -> [시/도], C열 -> [군/구], D열 -> [읍/면/동], E열 -> Nx값, F열 ->Ny값
-            
-            설정 결과를 Embed로 출력
-
-    기본값 = 울산광역시 중구 태화동
-"""
 import sys
 sys.path.append('C:/Users/windows/Desktop/repository/Programing/Discord_bot/Weather_Function')
 
@@ -19,8 +8,7 @@ from Location_data_util import *
 
 # 엑셀 파일 경로를 지정
 excel_file_path = 'DB\\기상청_격자위치.xlsx'
-
-# 엑셀 파일을 읽어서 DataFrame으로 저장.
+ # 엑셀 파일을 읽어서 DataFrame으로 저장.
 df = pd.read_excel(excel_file_path)
 
 class Region(commands.Cog):
@@ -29,6 +17,9 @@ class Region(commands.Cog):
 
     @commands.command(name="지역검색") # 미친 개 거지 발상이 같이 짜놔서 코드가 정말 더럽네요
     async def search_data(self, ctx, *args):
+        loading_emoji = '⚙️'
+        await ctx.message.add_reaction(loading_emoji)
+        
         # 입력값 확인 및 변수 초기화
         province, county, town = None, None, None
         if len(args) < 1:
@@ -72,16 +63,34 @@ class Region(commands.Cog):
                 embed.set_footer(text=f"Copyright (C) 2023 By Mushroomsando. All right reserved\t\t\t페이지 {page_number + 1}/{total_pages}")
                 return embed
         
+        success_reaction = '✅'
+        await ctx.message.remove_reaction(loading_emoji, ctx.me)
+        await ctx.message.add_reaction(success_reaction)
+        
         if len(filtered_data) == 1:  # 검색 결과가 한 개인 경우
             selected_item = filtered_data[0]
-            selected_embed = discord.Embed(title="✅ COMPLETE", description="💡검색결과가 1개여서 자동으로 선택됬어요." ,color=0x00aaff)
+            selected_embed = discord.Embed(title="✅ COMPLETE", description="💡검색결과가 1개여서 자동으로 선택했어요." ,color=0x00aaff)
             selected_embed.add_field(name="앞으로 이 지역의 현재날씨와 일기예보를 조회할께요.", 
                                      value=f"{selected_item['1단계']} {selected_item['2단계']} {selected_item['3단계']}", inline=False)
             selected_embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.send(embed=selected_embed)
             print(selected_item['격자 X'], selected_item['격자 Y'])
             print("OK")
-            #TODO 설정결과 파일 저장
+            
+            data_to_save = {
+                '서버 ID' : str(ctx.guild.id),
+                '1단계': [selected_item['1단계']],
+                '2단계': [selected_item['2단계']],
+                '3단계': [selected_item['3단계']],
+                'Nx' : [selected_item['격자 X']],
+                'Ny' : [selected_item['격자 Y']]
+            }
+
+            save = pd.DataFrame(data_to_save)
+            # Excel 파일로 저장
+            excel_filename = 'DB\\Server_Lattice Location_Save DB.xlsx'
+            save.to_excel(excel_filename, index=False, engine='openpyxl')
+            print(f"Settings saved to {excel_filename}")
 
         else:
             # 초기 페이지
@@ -140,7 +149,21 @@ class Region(commands.Cog):
                                 selected_embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
                                 await ctx.send(embed=selected_embed)
                                 print(selected_item['격자 X'], selected_item['격자 Y'])
-                                #TODO 설정결과 파일 저장
+                                
+                                data_to_save = {
+                                    '서버 ID' : str(ctx.guild.id),
+                                    '1단계': [selected_item['1단계']],
+                                    '2단계': [selected_item['2단계']],
+                                    '3단계': [selected_item['3단계']],
+                                    'Nx' : [selected_item['격자 X']],
+                                    'Ny' : [selected_item['격자 Y']]
+                                }
+
+                                save = pd.DataFrame(data_to_save)
+                                # Excel 파일로 저장
+                                excel_filename = 'DB\\Server_Lattice Location_Save DB.xlsx'
+                                save.to_excel(excel_filename, index=False, engine='openpyxl')
+                                print(f"Settings saved to {excel_filename}")
                             else:
                                 embed = discord.Embed(title="⚠️ ERROR", color=0xff0000)
                                 embed.add_field(name="유효하지 않은 번호", value="유효하지 않은 정보입니다. 다시 시도해 주세요.", inline=False)
