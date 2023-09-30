@@ -1,6 +1,11 @@
+import sys
+sys.path.append('C:/Users/windows/Desktop/repository/Programing/Discord_bot/Weather_Function')
+
 from discord.ext import commands
 import discord
 import asyncio
+import pandas as pd
+import Location_data_util as location
 
 class Utilities(commands.Cog):
     def __init__(self, bot):
@@ -12,7 +17,6 @@ class Utilities(commands.Cog):
         embed = discord.Embed(title="🛠️ COMPLETE", description=f"{amount}개의 메시지가 청소되었습니다.", color=0x00aaff)
         embed.set_footer(text="이 메시지는 3초 뒤에 자동으로 삭제됩니다...")
         await ctx.channel.purge(limit=amount + 1)  # amount + 1 만큼의 메시지 삭제
-
         cleanup_delay = 3  # 메시지 삭제까지의 딜레이 (단위: 초)
         cleanup_message = await ctx.send(embed=embed)
 
@@ -51,8 +55,18 @@ class Utilities(commands.Cog):
         embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
         await ctx.reply(embed=embed) # 밴되어 있지 않은 경우 메시지 전송
 
-    @commands.command(name="서버정보") #TODO 지역 선택 기능과 연계
+    @commands.command(name="서버정보")
     async def server_info(self, ctx):
+        excel_file_path = 'DB\\Server_Lattice Location_Save DB.xlsx'
+        df = pd.read_excel(excel_file_path)
+
+        target_server_id = ctx.guild.id
+        row_data = location.server_filter_data(df,target_server_id)
+        if row_data is None:
+            result = "⚠️ 초기 설정 필요"
+        else:
+            result = f"{row_data['1단계']} {row_data['2단계']} {row_data['3단계']}"
+        
         server = ctx.guild
         roles = len(server.roles)
         human_members = sum(not member.bot for member in server.members)
@@ -66,7 +80,7 @@ class Utilities(commands.Cog):
         embed.add_field(name=f"👥 멤버 수 - 총 {human_members + bot_members}명", value=f"👤 유저: {human_members}명\n🤖 봇: {bot_members}개", inline=False)
         embed.add_field(name=f"📻 채널 수 - 총 {voice_channels + text_channels}개", value=f"📞 음성채널: {voice_channels}개\n💬 채팅채널: {text_channels}개", inline=False)
         embed.add_field(name="🪪 역할 수", value=f"{roles}개", inline=False)
-        embed.add_field(name="⛅ 일기예보 조회위치", value="개발중...")
+        embed.add_field(name="⛅ 일기예보 조회위치", value=result)
         embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
         await ctx.reply(embed=embed)  # Embed 형식으로 서버 정보 전송
     

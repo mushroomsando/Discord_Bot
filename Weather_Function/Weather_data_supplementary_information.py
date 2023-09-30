@@ -81,7 +81,7 @@ def get_sky_emoji(sky_code, pty_code):
             return '☁️ 흐림'
         
 
-def discomfort_index(Ta, RH, V):
+def discomfort_index(Ta, RH):
     """
     체감온도를 구하는 함수
     
@@ -96,13 +96,6 @@ def discomfort_index(Ta, RH, V):
     now = datetime.now()
     month = now.month
 
-    if 5 <= month <= 9:
-        Tw = Ta * math.atan(0.151977 * math.sqrt(RH + 8.313659)) + math.atan(Ta + RH) - math.atan(RH - 1.67633) + 0.00391838 * math.pow(RH, 1.5) * math.atan(0.023101 * RH) - 4.686035
-        discomfort_index = -0.2442 + 0.55399 * Tw + 0.45535 * Ta - 0.0022 * math.pow(Tw, 2) + 0.00278 * Tw * Ta + 3.0
-        return discomfort_index # 여름철 체감온도
-    else:
-        if Ta <= 10 and V >= 1.3:
-            discomfort_index = 13.12 + 0.6215 * Ta - 11.37 * math.pow(V, 0.16) + 0.3965 * math.pow(V, 0.16) * Ta
-            return discomfort_index # 겨울철 체감온도
-        else:
-            return "겨울철 체감온도는 기온 10도 이하 풍속 1.3m/s 이상일 때만 산출합니다." # 겨울철 체감온도는 기온 10도 이하 풍속 1.3m/s 이상일 때만 산출
+    Tw = Ta * math.atan(0.151977 * math.sqrt(RH + 8.313659)) + math.atan(Ta + RH) - math.atan(RH - 1.67633) + 0.00391838 * math.pow(RH, 1.5) * math.atan(0.023101 * RH) - 4.686035
+    discomfort_index = -0.2442 + 0.55399 * Tw + 0.45535 * Ta - 0.0022 * math.pow(Tw, 2) + 0.00278 * Tw * Ta + 3.0
+    return discomfort_index
