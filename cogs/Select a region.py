@@ -8,25 +8,26 @@ from Location_data_util import *
 
 # 엑셀 파일 경로를 지정
 excel_file_path = 'DB\\기상청_격자위치.xlsx'
- # 엑셀 파일을 읽어서 DataFrame으로 저장.
+# 엑셀 파일을 읽어서 DataFrame으로 저장.
 df = pd.read_excel(excel_file_path)
 
 class Region(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="지역검색") # 미친 개 거지 발상이 같이 짜놔서 코드가 정말 더럽네요
+    @commands.command(name="지역검색")
     async def search_data(self, ctx, *args):
-        # 입력값 확인 및 변수 초기화
-        province, county, town = None, None, None
+        # 입력값 확인
         if len(args) < 1:
             await ctx.message.add_reaction("⚠️")
             raise commands.BadArgument
-    
+
         loading_emoji = '⚙️'
+        success_reaction = '✅'
         await ctx.message.add_reaction(loading_emoji)
-        
+
         # 검색어 추출
+        province, county, town = None, None, None
         for term in args:
             if term in df['1단계'].unique():
                 province = term
@@ -38,43 +39,36 @@ class Region(commands.Cog):
         # 조건에 맞는 데이터 검색
         filtered_data = filter_data(df, province, county, town)
 
-        #한 페이지에 보여줄 정보 갯수 설정
+        # 페이지 나누기
         chunk_size = 10
-
-        #페이지 나누기
         pages = [filtered_data[i:i + chunk_size] for i in range(0, len(filtered_data), chunk_size)]
-        page_number = 0
         total_pages = len(pages)
+        page_number = 0
 
         def create_embed(page_number):
-                if len(filtered_data) > 30:
-                    message = f"검색결과 {len(filtered_data)}개 \n💡검색결과가 많아 보입니다. 좀 더 많은 정보를 입력해 보세요."
-                else:
-                    message = f"검색결과 {len(filtered_data)}개"
-                
-                current_page_data = pages[page_number]
-                embed = discord.Embed(title="🔍 Search Results", description=message, color=0x00aaff)
-                number = page_number * chunk_size + 1
-                for item in pages[page_number]:
-                    embed.add_field(name = f"No. {number}", value = f"{item['1단계']} {item['2단계']} {item['3단계']}", inline=False)
-                    number += 1
-                embed.set_footer(text=f"Copyright (C) 2023 By Mushroomsando. All right reserved\t\t\t페이지 {page_number + 1}/{total_pages}")
-                return embed
-        
-        success_reaction = '✅'
+            current_page_data = pages[page_number]
+            message = f"검색결과 {len(filtered_data)}개" if len(filtered_data) <= 30 else "검색결과가 많아 보입니다. 좀 더 많은 정보를 입력해 보세요."
+            embed = discord.Embed(title="🔍 Search Results", description=message, color=0x00aaff)
+            number = page_number * chunk_size + 1
+            for item in current_page_data:
+                embed.add_field(name=f"No. {number}", value=f"{item['1단계']} {item['2단계']} {item['3단계']}", inline=False)
+                number += 1
+            embed.set_footer(text=f"Copyright (C) 2023 By Mushroomsando. All right reserved\t\t\t페이지 {page_number + 1}/{total_pages}")
+            return embed
+
         await ctx.message.remove_reaction(loading_emoji, ctx.me)
         await ctx.message.add_reaction(success_reaction)
-        
-        if len(filtered_data) == 1:  # 검색 결과가 한 개인 경우
+
+        if len(filtered_data) == 1:
             selected_item = filtered_data[0]
-            selected_embed = discord.Embed(title="✅ COMPLETE", description="💡검색결과가 1개여서 자동으로 선택했어요." ,color=0x00aaff)
+            selected_embed = discord.Embed(title="✅ COMPLETE", description="💡검색결과가 1개여서 자동으로 선택했어요.", color=0x00aaff)
             selected_embed.add_field(name="앞으로 이 지역의 현재날씨와 일기예보를 조회할께요.", 
                                      value=f"{selected_item['1단계']} {selected_item['2단계']} {selected_item['3단계']}", inline=False)
             selected_embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.send(embed=selected_embed)
             print(selected_item['격자 X'], selected_item['격자 Y'])
             print("OK")
-            
+
             data_to_save = {
                 '서버 ID' : str(ctx.guild.id),
                 '1단계': [selected_item['1단계']],
@@ -89,46 +83,29 @@ class Region(commands.Cog):
             excel_filename = 'DB\\Server_Lattice Location_Save DB.xlsx'
             save.to_excel(excel_filename, index=False, engine='openpyxl')
             print(f"Settings saved to {excel_filename}")
-
         else:
-            # 초기 페이지
             paginated_embed = create_embed(page_number)
             paginated_message = await ctx.send(embed=paginated_embed)
 
-            left_arrow = '⬅️'
-            right_arrow = '➡️'
-            search = '🔍'
-            cancle = '✖️'
-            # 이동용 이모지를 추가
-            if total_pages > 1:
-                await paginated_message.add_reaction(left_arrow)
-                await paginated_message.add_reaction(right_arrow)
-                await paginated_message.add_reaction(search)
-                await paginated_message.add_reaction(cancle)
-            print("OK")
+            arrow_emojis = ['⬅️', '➡️', '🔍', '✖️']
+            for emoji in arrow_emojis:
+                if total_pages > 1 or emoji != '➡️':
+                    await paginated_message.add_reaction(emoji)
 
             while True:
                 try:
                     reaction, user = await self.bot.wait_for('reaction_add', timeout=60.0, check=lambda r, u: u == ctx.author and r.message.id == paginated_message.id)
 
-                    if str(reaction.emoji) == left_arrow and page_number > 0:
+                    if str(reaction.emoji) == '⬅️' and page_number > 0:
                         page_number -= 1
-                        paginated_embed = create_embed(page_number)
-                        await paginated_message.edit(embed=paginated_embed)
-                        await paginated_message.remove_reaction(reaction, user)
-
-                    elif str(reaction.emoji) == right_arrow and page_number < total_pages - 1:
+                    elif str(reaction.emoji) == '➡️' and page_number < total_pages - 1:
                         page_number += 1
-                        paginated_embed = create_embed(page_number)
-                        await paginated_message.edit(embed=paginated_embed)
-                        await paginated_message.remove_reaction(reaction, user)
-                    
-                    elif str(reaction.emoji) == cancle:
+                    elif str(reaction.emoji) == '✖️':
                         embed = discord.Embed(title="✅ INFO", color=0x00aaff)
                         embed.add_field(name="취소됨", value="작업이 취소되었습니다.", inline=False)
                         embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
                         await ctx.reply(embed=embed)
-                    
+                        break
                     elif str(reaction.emoji) == '🔍':
                         await ctx.send("원하는 번호를 입력하세요: (예: !선택 3)")
 
@@ -147,7 +124,7 @@ class Region(commands.Cog):
                                 selected_embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
                                 await ctx.send(embed=selected_embed)
                                 print(selected_item['격자 X'], selected_item['격자 Y'])
-                                
+
                                 data_to_save = {
                                     '서버 ID' : str(ctx.guild.id),
                                     '1단계': [selected_item['1단계']],
@@ -173,9 +150,9 @@ class Region(commands.Cog):
                             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
                             await ctx.reply(embed=embed)
                         break
-
                 except TimeoutError:
                     break
+
     
     @search_data.error #예외처리
     async def kickerror(self, ctx, error):
