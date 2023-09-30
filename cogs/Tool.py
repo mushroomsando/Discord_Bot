@@ -1,8 +1,14 @@
 import discord
 from discord.ext import commands
 import time
+import json
 
 now = time.strftime(f"%Y년%m월%d일 %H:%M:%S", time.localtime())
+def load_info():
+    with open("DB\\version.json", "r", encoding="utf-8") as file:
+        info = json.load(file)
+    return info
+info = load_info()
 
 class Tool(commands.Cog):
     def __init__(self, bot):
@@ -24,8 +30,9 @@ class Tool(commands.Cog):
     @commands.command(name="봇 정보")
     async def info(self, ctx):
         embed = discord.Embed(title="🛠️ INFO", description="HELLO WORLD!",color = 0x00aff)
-        embed.add_field(name = "version", value = "23v0731b")
-        embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+        embed.add_field(name = "version", value = info['version'])
+        embed.add_field(name = "패치노트", value = info['패치노트'])
+        embed.set_footer(text="u : 업데이트     f : 버그픽스     m: 로직 개선 또는 마이너 업데이트  \nd : 개발버전     b : 베타버전     r : 릴리즈")
         await ctx.reply(embed=embed)
     
     @commands.command(name="계산기")
