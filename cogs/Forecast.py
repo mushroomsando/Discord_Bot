@@ -40,11 +40,11 @@ class Forecast(commands.Cog):
         process_data = Wd.ultra_short_live_chek(weather_data)
 
         loading_emoji = '⚙️'
-        message = await ctx.send(loading_emoji)
+        await ctx.message.add_reaction(loading_emoji)
 
         success_reaction = '✅'
-        await message.clear_reactions()
-        await message.add_reaction(success_reaction)
+        await ctx.message.remove_reaction(loading_emoji, ctx.me)
+        await ctx.message.add_reaction(success_reaction)
 
         embed = discord.Embed(
             title=f"{Wi.get_visual_data(weather_data, 1)}NOW WEATHER\n-------------\n🚩{result['1단계']} {result['2단계']} {result['3단계']}\n\t\t\t\t\t\t\t"

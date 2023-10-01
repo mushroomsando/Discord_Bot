@@ -27,11 +27,11 @@ class Tool(commands.Cog):
         embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
         await ctx.reply(embed=embed)
 
-    @commands.command(name="봇 정보")
+    @commands.command(name="패치노트")
     async def info(self, ctx):
-        embed = discord.Embed(title="🛠️ INFO", description="HELLO WORLD!",color = 0x00aff)
-        embed.add_field(name = "version", value = info['version'])
-        embed.add_field(name = "패치노트", value = info['패치노트'])
+        embed = discord.Embed(title="🛠️ INFO", description="HELLO WORLD!",color = 0x00aaff)
+        embed.add_field(name = "version", value = info['version'], inline=False)
+        embed.add_field(name = "패치노트", value = info['패치노트'], inline=False)
         embed.set_footer(text="u : 업데이트     f : 버그픽스     m: 로직 개선 또는 마이너 업데이트  \nd : 개발버전     b : 베타버전     r : 릴리즈")
         await ctx.reply(embed=embed)
     
