@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import time
 import json
+import sympy
 
 now = time.strftime(f"%Y년%m월%d일 %H:%M:%S", time.localtime())
 def load_info():
@@ -38,8 +39,10 @@ class Tool(commands.Cog):
     @commands.command(name="계산기")
     async def calculate(self, ctx, *, expression):
         try:
-            result = eval(expression)
-            embed = discord.Embed(title="🛠️ COMPLETE",color=0x00aaff) #
+            # SymPy의 sympify 함수를 사용하여 수식을 평가
+            result = sympify(expression)
+
+            embed = discord.Embed(title="🛠️ COMPLETE", color=0x00aaff)
             embed.add_field(name="수식", value=expression, inline=False)
             embed.add_field(name="계산결과", value=result, inline=False)
             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
@@ -54,9 +57,10 @@ class Tool(commands.Cog):
             await ctx.reply(embed=embed)
         except Exception as e:
             embed = discord.Embed(title="🛠️ ERROR", description=f"음... 무언가 잘못되었어요.", color=0xff0000)
-            embed.add_field(name = "오류내용", value=e)
+            embed.add_field(name="오류내용", value=str(e))
             embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
             await ctx.reply(embed=embed)
+
 
     @calculate.error
     async def calculate_error(self, ctx, error):
