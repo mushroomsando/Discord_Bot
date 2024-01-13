@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import time
 import json
-import sympy
+import ast
 
 now = time.strftime(f"%Y년%m월%d일 %H:%M:%S", time.localtime())
 def load_info():
@@ -39,8 +39,9 @@ class Tool(commands.Cog):
     @commands.command(name="계산기")
     async def calculate(self, ctx, *, expression):
         try:
-            # SymPy의 sympify 함수를 사용하여 수식을 평가
-            result = sympify(expression)
+            # 파싱된 AST를 평가하여 수식 계산
+            parsed_expression = ast.parse(expression, mode='eval')
+            result = eval(compile(parsed_expression, filename="<string>", mode='eval'))
 
             embed = discord.Embed(title="🛠️ COMPLETE", color=0x00aaff)
             embed.add_field(name="수식", value=expression, inline=False)
