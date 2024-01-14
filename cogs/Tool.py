@@ -54,11 +54,15 @@ class Tool(commands.Cog):
     @commands.command(name="계산기")
     async def calculate(self, ctx, *, expression):
         if not self.is_valid_expression(expression):
-            await ctx.reply("Invalid input. Please enter a valid mathematical expression.")
+            embed = discord.Embed(title="🛠️ ERROR", description="음... 명령을 처리할 수 없어요 :()", color=0xff0000)
+            embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+            await ctx.reply(embed=embed)
             return
 
         if not re.match(r"^[0-9+\-*/.() ]+$", expression):
-            await ctx.reply("Invalid input. Please enter a valid mathematical expression.")
+            embed = discord.Embed(title="🛠️ ERROR", description="음... 명령을 처리할 수 없어요 :()", color=0xff0000)
+            embed.set_footer(text="Copyright (C) 2023 By Mushroomsando. All right reserved")
+            await ctx.reply(embed=embed)
             return
 
         try:

@@ -25,8 +25,7 @@ class Forecast(commands.Cog):
                                           color=0xffdd00))
             return
         
-        #TODO : 단기예보 기반 일기예보 정보 받아오기
-
+        #TODO : 초단기예보 기반 일기예보 정보 받아오기
         await ctx.reply("현재 작업중...")
 
     
