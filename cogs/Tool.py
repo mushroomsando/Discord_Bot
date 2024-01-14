@@ -3,6 +3,7 @@ from discord.ext import commands
 import time
 import json
 import ast
+import re
 
 now = time.strftime(f"%Y년%m월%d일 %H:%M:%S", time.localtime())
 def load_info():
@@ -12,6 +13,20 @@ def load_info():
 info = load_info()
 
 class Tool(commands.Cog):
+    def is_valid_expression(self, expr):
+        try:
+            ast.parse(expr, mode='eval')
+            return True
+        except SyntaxError:
+            return False
+
+    def safe_eval(self, expr):
+        try:
+            result = eval(expr, {'__builtins__': {}})
+            return result
+        except Exception as e:
+            print(f'Error: {e}')
+            return None
     def __init__(self, bot):
         self.bot = bot
     
@@ -38,10 +53,16 @@ class Tool(commands.Cog):
     
     @commands.command(name="계산기")
     async def calculate(self, ctx, *, expression):
+        if not self.is_valid_expression(expression):
+            await ctx.reply("Invalid input. Please enter a valid mathematical expression.")
+            return
+
+        if not re.match(r"^[0-9+\-*/.() ]+$", expression):
+            await ctx.reply("Invalid input. Please enter a valid mathematical expression.")
+            return
+
         try:
-            # 파싱된 AST를 평가하여 수식 계산
-            parsed_expression = ast.parse(expression, mode='eval')
-            result = eval(compile(parsed_expression, filename="<string>", mode='eval'))
+            result = self.safe_eval(expression)
 
             embed = discord.Embed(title="🛠️ COMPLETE", color=0x00aaff)
             embed.add_field(name="수식", value=expression, inline=False)
